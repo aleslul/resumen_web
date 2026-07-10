@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Biología Plaquetaria: Nuevos Conceptos</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #fafaf9;
+            color: #292524;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 40vh;
+            max-height: 400px;
+        }
+        @media (max-width: 768px) {
+            .chart-container {
+                height: 300px;
+            }
+        }
+        .drug-card {
+            transition: all 0.3s ease;
+        }
+        .hidden-drug {
+            display: none !important;
+        }
+    </style>
+</head>
+<body class="antialiased selection:bg-red-200 selection:text-red-900">
+
+    <!-- Chosen Palette: Cálida y Minimalista (bg-stone-50, texto stone-800, acentos en red-700 y amber-600 para reflejar la temática sanguínea sin abrumar). -->
+    <!-- Application Structure Plan: Diseño tipo "One-Page Dashboard" dividido en 4 secciones funcionales. 1. Ciclo de Vida (para establecer contexto biológico), 2. Heterogeneidad (interacción visual para explorar subpoblaciones), 3. Priming y Trombosis (gráfico de balance que ilustra el estado de activación), 4. Farmacología (rejilla filtrable de tratamientos). Esta estructura guía al usuario desde la biología celular básica hasta la aplicación clínica y terapéutica de forma lógica y fluida. -->
+    <!-- Visualization & Content Choices: 1. Ciclo de Vida: Botones interactivos que actualizan texto dinámico (Objetivo: Informar; Justificación: Simplifica la lectura de procesos paralelos). 2. Heterogeneidad: Chart.js Doughnut interactivo (Objetivo: Organizar/Categorizar; Justificación: Permite al usuario descubrir los "hallmarks" uno por uno sin saturación de texto). 3. Priming: Chart.js Bar Chart Horizontal Divergente (Objetivo: Comparar; Justificación: Muestra claramente el balance entre inhibición y excitación vascular). 4. Farmacología: HTML CSS Grid con filtro JS (Objetivo: Organizar; Justificación: Permite la rápida comparación entre dianas clínicas actuales y futuras). TODO sin usar SVG ni Mermaid. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <nav class="fixed top-0 w-full bg-white/90 backdrop-blur-md border-b border-stone-200 z-50">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex-shrink-0 font-bold text-xl text-red-700 tracking-tight">
+                    Plat<span class="text-stone-800">Review</span>
+                </div>
+                <div class="hidden md:flex space-x-6 text-sm font-semibold text-stone-600">
+                    <a href="#ciclo" class="hover:text-red-700 transition">Ciclo de Vida</a>
+                    <a href="#heterogeneidad" class="hover:text-red-700 transition">Heterogeneidad</a>
+                    <a href="#priming" class="hover:text-red-700 transition">Priming y Trombosis</a>
+                    <a href="#farmacologia" class="hover:text-red-700 transition">Farmacología</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <header class="pt-32 pb-16 bg-gradient-to-b from-stone-100 to-stone-50 border-b border-stone-200">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h1 class="text-4xl md:text-5xl font-extrabold text-stone-900 mb-6 leading-tight">
+                Biología Plaquetaria: <span class="text-red-700">Nuevos Conceptos</span>
+            </h1>
+            <p class="text-lg md:text-xl text-stone-600 mb-8 max-w-2xl mx-auto leading-relaxed">
+                Más allá de ser simples "ladrillos" en un coágulo, las plaquetas son células dinámicas, comunicadoras y con una profunda implicancia en la inmunidad y la aterotrombosis. Explora interactivamente sus mecanismos y su futuro terapéutico.
+            </p>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-24">
+
+        <section id="ciclo" class="scroll-mt-24">
+            <div class="mb-8 border-l-4 border-red-700 pl-4">
+                <h2 class="text-3xl font-bold text-stone-800">1. Formación, Destino y Comunicación</h2>
+                <p class="text-stone-600 mt-2 text-lg">
+                    Esta sección detalla la biología básica de la plaqueta. Desde su origen en los megacariocitos de la médula ósea, su vida media de 7 a 10 días, hasta sus métodos de comunicación a través de gránulos y su eventual eliminación. Interactúa con las tarjetas para explorar cómo el cuerpo regula la desaparición de estas células envejecidas.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-stone-100">
+                    <h3 class="text-xl font-semibold mb-4 text-stone-800">&#9673; Comunicación Bidireccional</h3>
+                    <ul class="space-y-4 text-stone-600">
+                        <li class="flex items-start">
+                            <span class="text-red-700 mr-2 font-bold">&#187;</span>
+                            <div>
+                                <strong class="text-stone-800">&alpha;-granules:</strong> Contienen factores de crecimiento, citoquinas y proteínas coagulantes. Su defecto causa el <em>Grey Platelet Syndrome</em>.
+                            </div>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-red-700 mr-2 font-bold">&#187;</span>
+                            <div>
+                                <strong class="text-stone-800">&delta;-granules:</strong> Contienen ADP, ATP, Serotonina, Calcio y polifosfatos. Su defecto causa el <em>Hermansky-Pudlak Syndrome</em>.
+                            </div>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-red-700 mr-2 font-bold">&#187;</span>
+                            <div>
+                                <strong class="text-stone-800">Vesículas Extracelulares:</strong> Exosomas y microvesículas ricas en miRNAs que modulan el sistema inmune.
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="bg-white p-6 rounded-2xl shadow-sm border border-stone-100 flex flex-col">
+                    <h3 class="text-xl font-semibold mb-4 text-stone-800">&#9851; Mecanismos de Eliminación (Clearance)</h3>
+                    <p class="text-stone-500 mb-4 text-sm">Selecciona un mecanismo para ver cómo el cuerpo retira las plaquetas envejecidas (que pierden ARN con los días).</p>
+                    <div class="flex space-x-2 mb-6">
+                        <button id="btn-apoptosis" class="flex-1 py-2 px-4 bg-stone-100 hover:bg-red-50 hover:text-red-700 text-stone-700 font-medium rounded-lg transition border border-stone-200">
+                            Vía Apoptosis
+                        </button>
+                        <button id="btn-desialilacion" class="flex-1 py-2 px-4 bg-stone-100 hover:bg-red-50 hover:text-red-700 text-stone-700 font-medium rounded-lg transition border border-stone-200">
+                            Vía Hepática
+                        </button>
+                    </div>
+                    <div id="clearance-content" class="flex-grow flex items-center justify-center p-4 bg-stone-50 rounded-xl border border-stone-100 text-stone-600 text-center italic">
+                        Selecciona un mecanismo de eliminación arriba para conocer los detalles fisiopatológicos.
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="heterogeneidad" class="scroll-mt-24">
+            <div class="mb-8 border-l-4 border-amber-500 pl-4">
+                <h2 class="text-3xl font-bold text-stone-800">2. Heterogeneidad Plaquetaria</h2>
+                <p class="text-stone-600 mt-2 text-lg">
+                    Un paradigma fundamental moderno es que no todas las plaquetas son iguales ante la activación. Varían profundamente en tamaño, densidad y funcionalidad. Esta sección expone las cinco subpoblaciones funcionales principales en las que se divide un grupo de plaquetas activadas. Haz clic en las secciones del gráfico para descubrir la firma (hallmark) biológica y el rol de cada subtipo en la trombosis.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center bg-white p-8 rounded-3xl shadow-sm border border-stone-100">
+                <div class="w-full">
+                    <div class="chart-container">
+                        <canvas id="heterogeneityChart"></canvas>
+                    </div>
+                </div>
+                <div class="bg-stone-50 p-8 rounded-2xl border border-stone-200 min-h-[250px] flex flex-col justify-center">
+                    <h3 id="pop-title" class="text-2xl font-bold text-stone-800 mb-2">Selecciona una población</h3>
+                    <p id="pop-hallmark" class="text-sm text-red-700 font-semibold mb-4 uppercase tracking-wider">Hallmark Biológico</p>
+                    <p id="pop-desc" class="text-stone-600 leading-relaxed text-lg">
+                        Interactúa con el gráfico de la izquierda para explorar las características funcionales específicas de cada subtipo plaquetario documentado.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <section id="priming" class="scroll-mt-24">
+            <div class="mb-8 border-l-4 border-stone-800 pl-4">
+                <h2 class="text-3xl font-bold text-stone-800">3. Dinámica de Activación ("Priming") y Trombosis</h2>
+                <p class="text-stone-600 mt-2 text-lg">
+                    Las plaquetas no operan como interruptores simples (encendido/apagado); su reactividad se ajusta dinámicamente según el entorno del vaso sanguíneo. Esta sección ilustra el concepto de "Priming" (sensibilización), mostrando los factores que mantienen a la plaqueta inactiva (Negative Priming) frente a los factores metabólicos o de estrés que bajan su umbral de disparo (Positive Priming), conduciendo a la "Thromboinflammation".
+                </p>
+            </div>
+
+            <div class="bg-white p-8 rounded-3xl shadow-sm border border-stone-100 mb-8">
+                <div class="chart-container !max-w-4xl">
+                    <canvas id="primingChart"></canvas>
+                </div>
+                <p class="text-center text-sm text-stone-500 mt-6">
+                    Valores representativos conceptuales que ilustran la fuerza de desplazamiento del umbral de activación plaquetario.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-stone-50 p-6 rounded-2xl border border-stone-200 md:col-span-1">
+                    <h4 class="font-bold text-stone-800 mb-2 text-lg">Inicio y Amplificación</h4>
+                    <p class="text-stone-600 text-sm leading-relaxed">
+                        El daño vascular expone colágeno y factor de von Willebrand (vWF). La glicoproteína GPIb-V-IX se une al vWF y GPVI al colágeno. Seguidamente, se amplifica la señal liberando ADP ($P2Y_{12}$, $P2Y_1$) y $TXA_2$.
+                    </p>
+                </div>
+                <div class="bg-stone-50 p-6 rounded-2xl border border-stone-200 md:col-span-1">
+                    <h4 class="font-bold text-stone-800 mb-2 text-lg">Rol de la Trombina</h4>
+                    <p class="text-stone-600 text-sm leading-relaxed">
+                        La vía de coagulación generada por el <em>Tissue Factor</em> crea trombina. Esta actúa como el activador plaquetario más potente al unirse a los receptores PAR1 y PAR4.
+                    </p>
+                </div>
+                <div class="bg-stone-50 p-6 rounded-2xl border border-stone-200 md:col-span-1">
+                    <h4 class="font-bold text-stone-800 mb-2 text-lg">Thromboinflammation</h4>
+                    <p class="text-stone-600 text-sm leading-relaxed">
+                        Plaquetas interactúan con neutrófilos, monocitos y células T (eje CD40L-CD40, P-selectina), induciendo trampas extracelulares de neutrófilos (NETs) y agravando la ateroesclerosis.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <section id="farmacologia" class="scroll-mt-24 mb-24">
+            <div class="mb-8 border-l-4 border-emerald-600 pl-4">
+                <h2 class="text-3xl font-bold text-stone-800">4. Perspectivas Clínicas y Farmacológicas</h2>
+                <p class="text-stone-600 mt-2 text-lg">
+                    El Santo Grial de la farmacología cardiovascular es bloquear la trombosis sin provocar riesgo de hemorragia grave ("bleeding risk"). En esta sección se catalogan las terapias actuales frente a las moléculas en investigación. Usa los botones de filtro para aislar visualmente los medicamentos que atacan mecanismos clásicos versus aquellos que representan las dianas emergentes de la medicina de precisión.
+                </p>
+            </div>
+
+            <div class="flex flex-wrap gap-3 mb-8 justify-center">
+                <button class="filter-btn active px-6 py-2 rounded-full font-semibold text-sm transition bg-stone-800 text-white" data-filter="all">Todos los Fármacos</button>
+                <button class="filter-btn px-6 py-2 rounded-full font-semibold text-sm transition bg-stone-200 text-stone-700 hover:bg-stone-300" data-filter="actual">Uso Clínico Actual</button>
+                <button class="filter-btn px-6 py-2 rounded-full font-semibold text-sm transition bg-emerald-100 text-emerald-800 hover:bg-emerald-200" data-filter="potencial">Dianas Potenciales</button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" id="drugs-grid">
+                
+                <div class="drug-card actual bg-white p-6 rounded-2xl shadow-sm border-t-4 border-t-stone-800 border-x border-b border-stone-100">
+                    <span class="inline-block px-2 py-1 bg-stone-100 text-stone-600 text-xs font-bold rounded mb-3">Actual</span>
+                    <h3 class="text-xl font-bold text-stone-800 mb-1">Aspirina (AINEs)</h3>
+                    <p class="text-red-700 font-semibold text-sm mb-3">Diana: COX1</p>
+                    <p class="text-stone-600 text-sm">Bloquea de forma irreversible la síntesis autocrina de Tromboxano A2 (TXA_2). Es el pilar de prevención cardiovascular.</p>
+                </div>
+
+                <div class="drug-card actual bg-white p-6 rounded-2xl shadow-sm border-t-4 border-t-stone-800 border-x border-b border-stone-100">
+                    <span class="inline-block px-2 py-1 bg-stone-100 text-stone-600 text-xs font-bold rounded mb-3">Actual</span>
+                    <h3 class="text-xl font-bold text-stone-800 mb-1">Clopidogrel / Prasugrel</h3>
+                    <p class="text-red-700 font-semibold text-sm mb-3">Diana: P2Y_12</p>
+                    <p class="text-stone-600 text-sm">Bloquean el receptor principal de ADP, inhibiendo fuertemente el ciclo de amplificación autocrina plaquetaria.</p>
+                </div>
+
+                <div class="drug-card actual bg-white p-6 rounded-2xl shadow-sm border-t-4 border-t-stone-800 border-x border-b border-stone-100">
+                    <span class="inline-block px-2 py-1 bg-stone-100 text-stone-600 text-xs font-bold rounded mb-3">Actual</span>
+                    <h3 class="text-xl font-bold text-stone-800 mb-1">Abciximab / Tirofiban</h3>
+                    <p class="text-red-700 font-semibold text-sm mb-3">Diana: Integrin &alpha;IIb&beta;3</p>
+                    <p class="text-stone-600 text-sm">Bloquean el puente final de unión al fibrinógeno (agregación). Conllevan un alto riesgo de sangrado.</p>
+                </div>
+
+                <div class="drug-card actual bg-white p-6 rounded-2xl shadow-sm border-t-4 border-t-stone-800 border-x border-b border-stone-100">
+                    <span class="inline-block px-2 py-1 bg-stone-100 text-stone-600 text-xs font-bold rounded mb-3">Actual</span>
+                    <h3 class="text-xl font-bold text-stone-800 mb-1">Vorapaxar</h3>
+                    <p class="text-red-700 font-semibold text-sm mb-3">Diana: PAR1</p>
+                    <p class="text-stone-600 text-sm">Bloquea de forma directa los receptores activados por la trombina circulante en el trombo.</p>
+                </div>
+
+                <div class="drug-card potencial bg-white p-6 rounded-2xl shadow-sm border-t-4 border-t-emerald-500 border-x border-b border-stone-100">
+                    <span class="inline-block px-2 py-1 bg-emerald-100 text-emerald-800 text-xs font-bold rounded mb-3">Potencial</span>
+                    <h3 class="text-xl font-bold text-stone-800 mb-1">Revacept</h3>
+                    <p class="text-emerald-700 font-semibold text-sm mb-3">Diana: GPVI / CLEC2</p>
+                    <p class="text-stone-600 text-sm">Bloquea la adhesión inicial mediada por colágeno en sitios de lesión sin afectar significativamente la hemostasia normal.</p>
+                </div>
+
+                <div class="drug-card potencial bg-white p-6 rounded-2xl shadow-sm border-t-4 border-t-emerald-500 border-x border-b border-stone-100">
+                    <span class="inline-block px-2 py-1 bg-emerald-100 text-emerald-800 text-xs font-bold rounded mb-3">Potencial</span>
+                    <h3 class="text-xl font-bold text-stone-800 mb-1">Inhibidores PI3K&beta;</h3>
+                    <p class="text-emerald-700 font-semibold text-sm mb-3">Diana: PI3K&beta;</p>
+                    <p class="text-stone-600 text-sm">Ofrecen una gran potencia antiplaquetaria pero con un riesgo de sangrado aparentemente mucho menor que los estándares.</p>
+                </div>
+
+                <div class="drug-card potencial bg-white p-6 rounded-2xl shadow-sm border-t-4 border-t-emerald-500 border-x border-b border-stone-100">
+                    <span class="inline-block px-2 py-1 bg-emerald-100 text-emerald-800 text-xs font-bold rounded mb-3">Potencial</span>
+                    <h3 class="text-xl font-bold text-stone-800 mb-1">Ecto-nucleotidasas</h3>
+                    <p class="text-emerald-700 font-semibold text-sm mb-3">Diana: ATP / ADP</p>
+                    <p class="text-stone-600 text-sm">Enzimas recombinantes que degradan los nucleótidos activadores directamente en el plasma sanguíneo.</p>
+                </div>
+
+                <div class="drug-card potencial bg-white p-6 rounded-2xl shadow-sm border-t-4 border-t-emerald-500 border-x border-b border-stone-100">
+                    <span class="inline-block px-2 py-1 bg-emerald-100 text-emerald-800 text-xs font-bold rounded mb-3">Potencial</span>
+                    <h3 class="text-xl font-bold text-stone-800 mb-1">Inhibidores TKI</h3>
+                    <p class="text-emerald-700 font-semibold text-sm mb-3">Diana: SFK, BTK, SYK</p>
+                    <p class="text-stone-600 text-sm">Fármacos oncológicos (Tyrosine Kinase Inhibitors) que deprimen severamente las cascadas de señalización intracelulares de las plaquetas.</p>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-stone-900 text-stone-400 py-8 text-center border-t border-stone-800">
+        <p class="text-sm">Basado en <em>"Platelet biology and functions: new concepts and clinical perspectives"</em> - Nature Reviews</p>
+    </footer>
+
+    <script>
+        const btnApoptosis = document.getElementById('btn-apoptosis');
+        const btnDesialilacion = document.getElementById('btn-desialilacion');
+        const contentBox = document.getElementById('clearance-content');
+
+        const clearanceData = {
+            apoptosis: `<div class="text-left"><strong class="text-stone-800 block mb-2">Vía Apoptosis (BAX-BAK)</strong><p class="mb-2">Con el envejecimiento plaquetario, el balance de supervivencia celular se inclina hacia la vía proapoptótica intrínseca BAX-BAK.</p><p>Esto provoca que la membrana celular exponga <strong>Phosphatidylserine (fosfatidilserina)</strong> en su cara externa, funcionando como una señal de "cómeme" para las células fagocíticas del cuerpo.</p></div>`,
+            desialilacion: `<div class="text-left"><strong class="text-stone-800 block mb-2">Vía Hepática (Desialilación)</strong><p class="mb-2">Durante su circulación, las glicoproteínas de la membrana plaquetaria pierden progresivamente sus residuos de <strong>Ácido Siálico (Sialic acid)</strong>.</p><p>Esta desialilación altera la superficie plaquetaria, lo cual es detectado por receptores hepáticos específicos que proceden a secuestrar y eliminar estas plaquetas senescentes del torrente sanguíneo.</p></div>`
+        };
+
+        btnApoptosis.addEventListener('click', () => {
+            contentBox.innerHTML = clearanceData.apoptosis;
+            btnApoptosis.classList.add('bg-red-50', 'text-red-700', 'border-red-200');
+            btnApoptosis.classList.remove('bg-stone-100', 'text-stone-700');
+            btnDesialilacion.classList.remove('bg-red-50', 'text-red-700', 'border-red-200');
+            btnDesialilacion.classList.add('bg-stone-100', 'text-stone-700');
+        });
+
+        btnDesialilacion.addEventListener('click', () => {
+            contentBox.innerHTML = clearanceData.desialilacion;
+            btnDesialilacion.classList.add('bg-red-50', 'text-red-700', 'border-red-200');
+            btnDesialilacion.classList.remove('bg-stone-100', 'text-stone-700');
+            btnApoptosis.classList.remove('bg-red-50', 'text-red-700', 'border-red-200');
+            btnApoptosis.classList.add('bg-stone-100', 'text-stone-700');
+        });
+
+        const popData = {
+            0: {
+                title: "Aggregating Platelets",
+                hallmark: "Integrina \u03B1IIb\u03B23 Activa",
+                desc: "Expresan la integrina \u03B1IIb\u03B23 en estado de alta afinidad. Su rol central es unirse al fibrinógeno circulante, permitiendo la agregación y la formación de la estructura primaria o puente del trombo."
+            },
+            1: {
+                title: "Procoagulant Platelets",
+                hallmark: "Phosphatidylserine + Ballooning",
+                desc: "Plaquetas que se hinchan radicalmente ('Membrane ballooning') y exponen grandes cantidades de fosfatidilserina en su superficie. Funcionan como el andamiaje clave para ensamblar el complejo protrombinasa, impulsando una altísima generación de trombina."
+            },
+            2: {
+                title: "Coated Platelets",
+                hallmark: "Fibrin Coat",
+                desc: "Subpoblación que, además de exponer fosfatidilserina, retiene una robusta capa ('coat') de fibrina anclada a su superficie, vital para la estabilización estructural y mecánica del trombo."
+            },
+            3: {
+                title: "Secretory Platelets",
+                hallmark: "P-selectina + CD63",
+                desc: "Especializadas en la liberación activa del contenido masivo de gránulos. Expresan marcadores de membrana como P-selectina y CD63, fundamentales para el reclutamiento de leucocitos y la liberación local de agonistas."
+            },
+            4: {
+                title: "Exhausted Platelets",
+                hallmark: "Baja Reactividad",
+                desc: "Plaquetas refractarias que han sufrido activaciones previas circulando en sangre (ej. por sepsis o procesos oncológicos). Su capacidad de secreción está agotada, lo que resulta en una pobre respuesta in vitro e in vivo."
+            }
+        };
+
+        const ctxHet = document.getElementById('heterogeneityChart').getContext('2d');
+        const heterogeneityChart = new Chart(ctxHet, {
+            type: 'doughnut',
+            data: {
+                labels: ['Aggregating', 'Procoagulant', 'Coated', 'Secretory', 'Exhausted'],
+                datasets: [{
+                    data: [35, 20, 15, 20, 10],
+                    backgroundColor: [
+                        '#ef4444', 
+                        '#f97316', 
+                        '#eab308', 
+                        '#14b8a6', 
+                        '#a8a29e'  
+                    ],
+                    borderWidth: 2,
+                    borderColor: '#ffffff',
+                    hoverOffset: 15
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                        labels: {
+                            font: { family: 'Inter', size: 14 }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return ' Haz clic para ver detalles';
+                            }
+                        }
+                    }
+                },
+                onClick: (event, elements) => {
+                    if (elements.length > 0) {
+                        const idx = elements[0].index;
+                        const data = popData[idx];
+                        document.getElementById('pop-title').textContent = data.title;
+                        document.getElementById('pop-hallmark').textContent = data.hallmark;
+                        document.getElementById('pop-desc').textContent = data.desc;
+                    }
+                }
+            }
+        });
+
+        const ctxPriming = document.getElementById('primingChart').getContext('2d');
+        const primingChart = new Chart(ctxPriming, {
+            type: 'bar',
+            data: {
+                labels: [
+                    'PGI2 (Prostaciclina)', 
+                    'NO (Óxido Nítrico)', 
+                    'PGE2', 
+                    'Adrenalina', 
+                    'IGF1', 
+                    'Trombopoyetina', 
+                    'Shear Stress / Glucosa'
+                ],
+                datasets: [{
+                    label: 'Fuerza de Sensibilización (Conceptual)',
+                    data: [-85, -70, -40, 50, 65, 75, 90],
+                    backgroundColor: (context) => {
+                        const val = context.dataset.data[context.dataIndex];
+                        return val < 0 ? '#14b8a6' : '#ef4444';
+                    },
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                indexAxis: 'y',
+                scales: {
+                    x: {
+                        min: -100,
+                        max: 100,
+                        grid: { color: '#e7e5e4' },
+                        ticks: {
+                            callback: function(value) {
+                                if (value === -100) return 'Inhibición Fuerte';
+                                if (value === 0) return 'Reposo';
+                                if (value === 100) return 'Excitación Fuerte';
+                                return '';
+                            },
+                            font: { family: 'Inter' }
+                        }
+                    },
+                    y: {
+                        grid: { display: false },
+                        ticks: { font: { family: 'Inter', size: 12 } }
+                    }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                const val = context.raw;
+                                return val < 0 ? ' Negative Priming (Sube el umbral)' : ' Positive Priming (Baja el umbral)';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        const filterBtns = document.querySelectorAll('.filter-btn');
+        const drugCards = document.querySelectorAll('.drug-card');
+
+        filterBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                filterBtns.forEach(b => {
+                    b.classList.remove('bg-stone-800', 'text-white');
+                    if (b.dataset.filter === 'all') b.classList.add('bg-stone-200', 'text-stone-700');
+                    if (b.dataset.filter === 'actual') b.classList.add('bg-stone-200', 'text-stone-700');
+                    if (b.dataset.filter === 'potencial') b.classList.add('bg-emerald-100', 'text-emerald-800');
+                });
+                
+                if (btn.dataset.filter === 'all' || btn.dataset.filter === 'actual') {
+                    btn.classList.remove('bg-stone-200', 'text-stone-700');
+                    btn.classList.add('bg-stone-800', 'text-white');
+                } else if (btn.dataset.filter === 'potencial') {
+                    btn.classList.remove('bg-emerald-100', 'text-emerald-800');
+                    btn.classList.add('bg-emerald-700', 'text-white');
+                }
+
+                const filter = btn.dataset.filter;
+
+                drugCards.forEach(card => {
+                    if (filter === 'all') {
+                        card.classList.remove('hidden-drug');
+                    } else if (card.classList.contains(filter)) {
+                        card.classList.remove('hidden-drug');
+                    } else {
+                        card.classList.add('hidden-drug');
+                    }
+                });
+            });
+        });
+
+    </script>
+</body>
+</html>

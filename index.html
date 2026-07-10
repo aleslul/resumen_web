@@ -21,25 +21,48 @@
 
         .resumenContainer {
             margin-top: 100px;
+            display: flex;
+            flex-direction: row;
+            gap: 10px;
+            margin-bottom: 50px;
         }
 
         .resumenBtn {
             padding: 10px;
             width: auto;
-            height: 40px;
+            max-width: 150px;
+            height: fit-content;
             border: none;
             background-color: #0EA5E9;
             border-radius: 5px;
+        }
+
+        .resumenBtn:hover {
+            background-color: #F43F5E;
         }
     </style>
 </head>
 <body>
     <h1>Resumenes</h1>
+    <h2>Estos son los resumenes de todos los ppts y pdfs que me hiciste hacer</h2>
     <div class="resumenContainer">
         <a href="resumenes/fisiologia/hemograma.html">
             <button class="resumenBtn">Resumen Hemograma</button>
         </a>
+        <a href="resumenes/fisiologia/coagulacion.html">
+            <button class="resumenBtn">Fisiopatología de la Coagulación</button>
+        </a>
+        <a href="resumenes/fisiologia/hipocoagulabilidad.html">
+            <button class="resumenBtn">Hipocoagulabilidad</button>
+        </a>
+        <a href="resumenes/fisiologia/biologia_plaquetaria.html">
+            <button class="resumenBtn">Biología Plaquetaria (Funcion Plaquetaria)</button>
+        </a>
+        <a href="resumenes/fisiologia/fisiologia_plaquetaria.html">
+            <button class="resumenBtn">Fisiología Plaquetaria (Platelet Physiology)</button>
+        </a>
     </div>
-
+    <h3>Suerte en tu examen</h3>
+    <a href="https://www.youtube.com/watch?v=1xtFp2Wu_To&t=12897s" target="_blank" rel="noopener noreferrer">Link de la suerte</a>
 </body>
 </html>

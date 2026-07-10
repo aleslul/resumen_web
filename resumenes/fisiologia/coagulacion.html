@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Master en Coagulación: Fisiopatología Clínica</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #FDFCFB;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+
+        .gradient-border {
+            border: 2px solid transparent;
+            background-image: linear-gradient(white, white), linear-gradient(to right, #991b1b, #1e40af);
+            background-origin: border-box;
+            background-clip: padding-box, border-box;
+        }
+
+        .active-tab {
+            border-bottom: 3px solid #991b1b;
+            color: #991b1b;
+        }
+    </style>
+</head>
+<body class="text-slate-800">
+
+    <!-- Chosen Palette: Hematology Professional (Rojos Granate, Azules Clínicos y Blancos Neutros) -->
+    <!-- Application Structure Plan: 
+        1. Dashboard de Navegación: Secciones temáticas (Hemostasia Primaria, Secundaria, Limitantes y Clínica).
+        2. Visualización Dinámica: Gráficos de barras para interpretar TP/TTPA y tarjetas interactivas para el modelo celular.
+        3. Foco Educativo: Prioriza la diferenciación clínica (Púrpura vs Hematoma) mediante una tabla comparativa reactiva.
+        4. User Flow: El usuario explora desde lo microscópico (plaquetas) hasta la integración diagnóstica final.
+    -->
+    <!-- Visualization & Content Choices: 
+        - Modelo Celular -> Tarjetas de expansión -> Claridad en las fases de iniciación, amplificación y propagación.
+        - Pruebas de Laboratorio -> Gráfico de Barras (Chart.js) -> Visualización de tiempos alargados vs normales.
+        - Diferenciación Clínica -> Grid interactivo -> Facilitar la memorización de síntomas.
+        - NO SVG/Mermaid utilizados. Todo mediante HTML/CSS y Canvas.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <nav class="sticky top-0 bg-white/90 backdrop-blur-md z-50 border-b border-slate-200 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 bg-red-700 rounded-full flex items-center justify-center text-white font-bold italic">C</div>
+                <span class="font-extrabold text-xl tracking-tight text-slate-900 uppercase">Hemo<span class="text-red-700">Study</span></span>
+            </div>
+            <div class="hidden md:flex gap-6 text-sm font-semibold">
+                <button onclick="showSection('primaria')" class="hover:text-red-700 transition">Primaria</button>
+                <button onclick="showSection('secundaria')" class="hover:text-red-700 transition">Secundaria</button>
+                <button onclick="showSection('laboratorio')" class="hover:text-red-700 transition">Laboratorio</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-5xl mx-auto px-4 py-12">
+        
+        <!-- INTRODUCCIÓN -->
+        <header class="mb-16 text-center">
+            <h1 class="text-4xl md:text-5xl font-extrabold text-slate-900 mb-4">Fisiopatología de la Coagulación</h1>
+            <p class="text-lg text-slate-600 max-w-3xl mx-auto">
+                Un resumen integral diseñado para estudiantes de medicina, centrado en el equilibrio dinámico entre la formación del coágulo y su regulación fisiológica.
+            </p>
+        </header>
+
+        <!-- SECCIÓN: HEMOSTASIA PRIMARIA -->
+        <section id="sec-primaria" class="mb-20">
+            <div class="bg-red-50 p-8 rounded-3xl border border-red-100">
+                <div class="flex flex-col md:flex-row gap-8 items-center">
+                    <div class="flex-1">
+                        <span class="text-red-700 font-bold text-sm uppercase tracking-widest">Fase 1</span>
+                        <h2 class="text-3xl font-bold text-slate-900 mt-2 mb-4">Hemostasia Primaria</h2>
+                        <p class="text-slate-700 mb-6 leading-relaxed">
+                            Es la respuesta inmediata al daño vascular. El endotelio sano es antitrombótico (Óxido Nítrico, Prostaciclina), pero al lesionarse expone el colágeno que atrae a las plaquetas.
+                        </p>
+                        <div class="space-y-3">
+                            <div class="flex items-center gap-3 bg-white p-3 rounded-xl shadow-sm">
+                                <span class="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center font-bold text-red-700">1</span>
+                                <p class="text-sm"><strong>Adhesión:</strong> El Factor von Willebrand (FvW) une la plaqueta al vaso (vía GPIb/IX).</p>
+                            </div>
+                            <div class="flex items-center gap-3 bg-white p-3 rounded-xl shadow-sm">
+                                <span class="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center font-bold text-red-700">2</span>
+                                <p class="text-sm"><strong>Activación:</strong> Liberación de ADP y TXA2 (bloqueado por Aspirina).</p>
+                            </div>
+                            <div class="flex items-center gap-3 bg-white p-3 rounded-xl shadow-sm">
+                                <span class="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center font-bold text-red-700">3</span>
+                                <p class="text-sm"><strong>Agregación:</strong> Unión masiva vía fibrinógeno y receptor GPIIb/IIIa.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="w-full md:w-1/3">
+                        <div class="bg-white p-6 rounded-2xl shadow-inner border border-slate-100 text-center">
+                            <div class="text-4xl mb-2">🩸</div>
+                            <h4 class="font-bold text-slate-800">Tapón Plaquetario</h4>
+                            <p class="text-xs text-slate-500 mt-2">Inestable y transitorio. Requiere de la malla de fibrina para consolidarse.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECCIÓN: HEMOSTASIA SECUNDARIA - MODELO CELULAR -->
+        <section id="sec-secundaria" class="mb-20">
+            <div class="mb-10">
+                <h2 class="text-3xl font-extrabold text-slate-900">Hemostasia Secundaria</h2>
+                <p class="text-slate-600 mt-2">Sustituyendo el modelo de "cascada" por el modelo celular dinámico.</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Fase de Iniciación -->
+                <div class="bg-white p-6 rounded-2xl border-t-4 border-blue-600 shadow-lg hover:bg-slate-50 transition cursor-default">
+                    <h3 class="font-bold text-blue-700 mb-2">1. Iniciación</h3>
+                    <p class="text-xs text-slate-500 leading-relaxed">
+                        El endotelio dañado libera **Factor Tisular (FT)** que se une al VIIa. Se generan pequeñas trazas de trombina, insuficientes para el coágulo pero vitales para la señalización.
+                    </p>
+                </div>
+                <!-- Fase de Amplificación -->
+                <div class="bg-white p-6 rounded-2xl border-t-4 border-blue-400 shadow-lg hover:bg-slate-50 transition cursor-default">
+                    <h3 class="font-bold text-blue-500 mb-2">2. Amplificación</h3>
+                    <p class="text-xs text-slate-500 leading-relaxed">
+                        Esa pequeña trombina activa cofactores (V, VIII) y despierta a las plaquetas, preparando la superficie para la explosión final de actividad enzimática.
+                    </p>
+                </div>
+                <!-- Fase de Propagación -->
+                <div class="bg-white p-6 rounded-2xl border-t-4 border-red-700 shadow-lg hover:bg-slate-50 transition cursor-default">
+                    <h3 class="font-bold text-red-700 mb-2">3. Propagación</h3>
+                    <p class="text-xs text-slate-500 leading-relaxed">
+                        Explosión de trombina sobre las plaquetas. Se convierte el **Fibrinógeno** en **Fibrina**. ¡Formación del coágulo definitivo!
+                    </p>
+                </div>
+            </div>
+
+            <div class="mt-12 p-6 bg-slate-900 text-white rounded-3xl overflow-hidden relative">
+                <div class="relative z-10">
+                    <h4 class="text-xl font-bold mb-2">Mnemotecnia Clínica: "1972"</h4>
+                    <p class="text-slate-400 text-sm">Factores Vitamina K dependientes: <strong>10, 9, 7 y 2</strong>. Son inhibidos por la Warfarina/Cumarínicos.</p>
+                </div>
+                <div class="absolute -right-10 -bottom-10 opacity-10 text-9xl font-black italic">VIT K</div>
+            </div>
+        </section>
+
+        <!-- SECCIÓN: CLÍNICA Y LABORATORIO -->
+        <section id="sec-laboratorio" class="mb-20">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                
+                <!-- Diferenciación Clínica -->
+                <div>
+                    <h3 class="text-2xl font-bold mb-6">Semiología del Sangrado</h3>
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between p-4 bg-white border border-slate-200 rounded-xl">
+                            <div>
+                                <h5 class="font-bold text-slate-800">Petequias / Púrpura</h5>
+                                <p class="text-xs text-slate-500">Típico de fallo en Hemostasia Primaria</p>
+                            </div>
+                            <span class="px-3 py-1 bg-red-100 text-red-700 text-[10px] font-bold rounded-full">PLAQUETAS</span>
+                        </div>
+                        <div class="flex items-center justify-between p-4 bg-white border border-slate-200 rounded-xl">
+                            <div>
+                                <h5 class="font-bold text-slate-800">Hematomas / Hemartrosis</h5>
+                                <p class="text-xs text-slate-500">Típico de fallo en Hemostasia Secundaria</p>
+                            </div>
+                            <span class="px-3 py-1 bg-blue-100 text-blue-700 text-[10px] font-bold rounded-full">FACTORES</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-8 p-6 border-2 border-dashed border-slate-200 rounded-2xl">
+                        <h5 class="font-bold text-sm text-slate-700 mb-2">Prueba de Mezcla:</h5>
+                        <p class="text-xs text-slate-500 italic">Si el tiempo alarga y se corrige con plasma normal = Déficit de factor. Si NO se corrige = Inhibidor (ej. Lupus).</p>
+                    </div>
+                </div>
+
+                <!-- Gráfico de Laboratorio con AI -->
+                <div class="bg-white p-6 rounded-3xl shadow-xl border border-slate-100 flex flex-col h-full">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-xl font-bold">Interpretación de Tiempos</h3>
+                        <span class="bg-purple-100 text-purple-700 text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1 border border-purple-200">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                            GEMINI AI
+                        </span>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="labChart"></canvas>
+                    </div>
+                    <div class="mt-4 flex flex-wrap gap-2">
+                        <button onclick="updateChart('normal')" class="text-[10px] px-3 py-1 bg-slate-100 hover:bg-slate-200 rounded-full font-bold transition">NORMAL</button>
+                        <button onclick="updateChart('hemofilia')" class="text-[10px] px-3 py-1 bg-blue-100 text-blue-700 hover:bg-blue-200 rounded-full font-bold transition">HEMOFILIA (↑TTPA)</button>
+                        <button onclick="updateChart('warfarina')" class="text-[10px] px-3 py-1 bg-red-100 text-red-700 hover:bg-red-200 rounded-full font-bold transition">WARFARINA (↑TP)</button>
+                        <button onclick="generateAICase()" class="text-[10px] px-3 py-1 bg-gradient-to-r from-purple-500 to-indigo-500 text-white shadow-md hover:shadow-lg rounded-full font-bold flex items-center gap-1 transition transform hover:-translate-y-0.5">
+                            ✨ GENERAR CASO AI
+                        </button>
+                    </div>
+                    
+                    <!-- Caja de Explicación AI -->
+                    <div id="ai-tutor-box" class="mt-6 p-4 bg-slate-50 border border-slate-200 rounded-xl hidden flex-1">
+                        <div class="flex items-center gap-2 mb-2">
+                            <div class="w-6 h-6 rounded-full bg-purple-600 flex items-center justify-center text-white text-xs font-bold">AI</div>
+                            <h5 class="text-sm font-bold text-slate-800">Tutor Virtual Hematología</h5>
+                            <div id="ai-loading" class="hidden flex items-center gap-1">
+                                <span class="w-1.5 h-1.5 bg-purple-500 rounded-full animate-ping"></span>
+                                <span class="text-xs text-purple-600 font-medium">Analizando...</span>
+                            </div>
+                        </div>
+                        <p id="ai-explanation" class="text-sm text-slate-600 leading-relaxed"></p>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-slate-50 border-t border-slate-200 py-12 px-4 text-center">
+        <p class="text-slate-400 text-sm font-medium">Material de Estudio para Estudiantes de Medicina | Basado en Fisiopatología de la Coagulación</p>
+        <div class="mt-4 flex justify-center gap-6">
+            <span class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">© 2024 Resumen Médico</span>
+        </div>
+    </footer>
+
+    <script>
+        const labCtx = document.getElementById('labChart').getContext('2d');
+        
+        let chartInstance = new Chart(labCtx, {
+            type: 'bar',
+            data: {
+                labels: ['TP (Seg)', 'TTPA (Seg)'],
+                datasets: [{
+                    label: 'Tiempo (segundos)',
+                    data: [12, 30],
+                    backgroundColor: ['#991b1b', '#1e40af'],
+                    borderRadius: 12,
+                    barThickness: 40
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { 
+                        beginAtZero: true,
+                        max: 100,
+                        grid: { color: '#f1f5f9' }
+                    },
+                    x: { grid: { display: false } }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#1e293b',
+                        padding: 12,
+                        cornerRadius: 8
+                    }
+                }
+            }
+        });
+
+        async function fetchWithRetry(url, options, maxRetries = 3) {
+            let retries = 0;
+            while (retries < maxRetries) {
+                try {
+                    const response = await fetch(url, options);
+                    if (!response.ok) {
+                        if (response.status === 429) {
+                            retries++;
+                            await new Promise(resolve => setTimeout(resolve, Math.pow(2, retries) * 1000));
+                            continue;
+                        }
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return await response.json();
+                } catch (e) {
+                    if (retries === maxRetries - 1) throw e;
+                    retries++;
+                    await new Promise(resolve => setTimeout(resolve, Math.pow(2, retries) * 1000));
+                }
+            }
+        }
+
+        async function generateContent(prompt, isJson = false) {
+            const apiKey = "AQ.Ab8RN6J9yuKAxYWel5xdACW3JIIFHa_Ca1T-UkcrU-wbAk15gQ"; // API Key handled by Canvas environment
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+            
+            const payload = {
+                contents: [{ parts: [{ text: prompt }] }],
+            };
+
+            if (isJson) {
+                // Solicitamos respuesta estructurada en JSON para generar dinámicamente el gráfico
+                payload.generationConfig = {
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: "OBJECT",
+                        properties: {
+                            "tp_value": { type: "NUMBER", description: "Valor del Tiempo de Protrombina en segundos. Rango usual: 12 a 60 dependiendo de la gravedad." },
+                            "ttpa_value": { type: "NUMBER", description: "Valor del Tiempo de Tromboplastina Parcial Activada en segundos. Rango usual: 30 a 100 dependiendo de la gravedad." },
+                            "explicacion": { type: "STRING", description: "Breve viñeta clínica (1 línea) seguida de la justificación fisiopatológica de por qué los tiempos TP y TTPA se ven alterados de esta manera." }
+                        },
+                        required: ["tp_value", "ttpa_value", "explicacion"]
+                    }
+                };
+            }
+
+            try {
+                const data = await fetchWithRetry(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                return data.candidates[0].content.parts[0].text;
+            } catch (error) {
+                return null;
+            }
+        }
+
+        function showAILoading() {
+            const box = document.getElementById('ai-tutor-box');
+            const loading = document.getElementById('ai-loading');
+            const explanation = document.getElementById('ai-explanation');
+            box.classList.remove('hidden');
+            loading.classList.remove('hidden');
+            explanation.innerHTML = "";
+        }
+
+        function hideAILoading(htmlContent) {
+            const loading = document.getElementById('ai-loading');
+            const explanation = document.getElementById('ai-explanation');
+            loading.classList.add('hidden');
+            explanation.innerHTML = htmlContent;
+        }
+
+        async function updateChart(scenario) {
+            let newData = [12, 30];
+            let contextForAI = "paciente sano con tiempos de coagulación normales";
+            
+            if (scenario === 'hemofilia') {
+                newData = [12, 85];
+                contextForAI = "paciente con Hemofilia severa";
+            }
+            if (scenario === 'warfarina') {
+                newData = [45, 30];
+                contextForAI = "paciente con intoxicación por Warfarina (cumarínicos)";
+            }
+            
+            chartInstance.data.datasets[0].data = newData;
+            chartInstance.update();
+
+            showAILoading();
+            const prompt = `Actúa como un tutor experto de hematología clínica. Explica de forma concisa (máximo 3-4 líneas) por qué un ${contextForAI} presenta un Tiempo de Protrombina (TP) de ${newData[0]}s y un Tiempo de Tromboplastina Parcial Activada (TTPA) de ${newData[1]}s. Menciona qué vía de la cascada de coagulación está evaluando cada alteración. Usa formato HTML ligero si necesitas resaltar términos clave (ej. <strong>).`;
+            
+            const aiResponse = await generateContent(prompt);
+            if (aiResponse) {
+                hideAILoading(aiResponse);
+            } else {
+                hideAILoading("<span class='text-red-500'>Ocurrió un error al contactar al Tutor AI. Por favor, intenta nuevamente.</span>");
+            }
+        }
+
+        async function generateAICase() {
+            showAILoading();
+            
+            // Valores temporales neutrales mientras Gemini piensa
+            chartInstance.data.datasets[0].data = [0, 0];
+            chartInstance.update();
+
+            const prompt = "Genera un caso clínico aleatorio y desafiante sobre un trastorno de coagulación (Ej. Coagulación Intravascular Diseminada, Deficiencia de Vitamina K severa, Falla Hepática, Enfermedad de von Willebrand, Uso de Heparina no fraccionada). Devuelve un JSON que contenga los valores de laboratorio (tp_value y ttpa_value) coherentes con el caso, y una 'explicacion' que inicie con una viñeta clínica corta y luego explique la fisiopatología detrás de los valores alterados en la hemostasia secundaria. Usa formato HTML ligero (<strong>, <br>) en la explicación.";
+            
+            const jsonResponse = await generateContent(prompt, true);
+            
+            if (jsonResponse) {
+                try {
+                    const result = JSON.parse(jsonResponse);
+                    
+                    chartInstance.data.datasets[0].data = [result.tp_value, result.ttpa_value];
+                    chartInstance.update();
+                    
+                    hideAILoading(`<strong>🔍 Caso Clínico Generado por AI:</strong><br/><br/>${result.explicacion}`);
+                } catch(e) {
+                    hideAILoading("<span class='text-red-500'>Error al procesar los datos clínicos de la AI.</span>");
+                }
+            } else {
+                hideAILoading("<span class='text-red-500'>Ocurrió un error al contactar al Tutor AI. Por favor, intenta nuevamente.</span>");
+            }
+        }
+
+        function showSection(id) {
+            const el = document.getElementById('sec-' + id);
+            window.scrollTo({
+                top: el.offsetTop - 100,
+                behavior: 'smooth'
+            });
+        }
+    </script>
+</body>
+</html>

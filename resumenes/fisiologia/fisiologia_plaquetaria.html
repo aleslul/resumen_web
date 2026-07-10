@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fisiología Plaquetaria: Dashboard Interactivo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Chosen Palette: Fondo "Slate" (slate-50 a slate-900) para un entorno científico limpio, acentos en "Rose" (rose-600) para evocar la sangre/plaquetas y "Indigo" (indigo-600) para resaltar componentes moleculares y de señalización. -->
+    <!-- Application Structure Plan: Un dashboard científico estructurado en 4 módulos interactivos clave que guían al usuario desde la macroestructura hasta los procesos moleculares:
+         1. Métricas Clave (Resumen visual rápido).
+         2. Anatomía Celular (Navegación por pestañas para explorar las 4 zonas de la plaqueta sin abrumar con texto).
+         3. Arsenal Secretor y Gránulos (Gráfico de barras de Chart.js para comparar la abundancia relativa de gránulos, apoyado con tarjetas de detalles).
+         4. Superficie y Señalización (Receptores y vías de activación mostradas en tarjetas interactivas y modales).
+         Esta arquitectura permite un aprendizaje progresivo y modular. -->
+    <!-- Visualization & Content Choices:
+         - Anatomía -> Objetivo: Organizar -> Navegación por Pestañas (JS). Justificación: Separa lógicamente las zonas periférica, sol-gel, organelas y membranas.
+         - Gránulos -> Objetivo: Comparar -> Chart.js Bar Chart. Justificación: Muestra drásticamente la superioridad numérica de los gránulos alfa frente a los densos y lisosomas.
+         - Receptores y Vías -> Objetivo: Informar y Relacionar -> Tarjetas en Grid con hover states (CSS/HTML). Justificación: Facilita la retención de las 3 glicoproteínas clave y los agonistas (Trombina/ADP) sin usar diagramas SVG complejos.
+         - NO se utilizan SVG ni Mermaid JS según las restricciones. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* slate-50 */
+            color: #0f172a; /* slate-900 */
+        }
+        
+        /* Chart Container Mandatory Styling */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 40vh;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.4s ease-in-out; }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .receptor-card { transition: transform 0.3s ease, box-shadow 0.3s ease; }
+        .receptor-card:hover { transform: translateY(-5px); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1); }
+    </style>
+</head>
+<body class="antialiased selection:bg-rose-200 selection:text-rose-900">
+
+    <!-- Navbar -->
+    <nav class="fixed w-full z-50 top-0 bg-white/80 backdrop-blur-md border-b border-slate-200 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-2">
+                    <span class="text-2xl">🩸</span>
+                    <span class="font-bold text-xl text-slate-800 tracking-tight">Fisio<span class="text-rose-600">Plaquetaria</span></span>
+                </div>
+                <div class="hidden md:flex space-x-8">
+                    <a href="#anatomia" class="text-sm font-semibold text-slate-600 hover:text-rose-600 transition">Anatomía</a>
+                    <a href="#granulos" class="text-sm font-semibold text-slate-600 hover:text-rose-600 transition">Gránulos</a>
+                    <a href="#receptores" class="text-sm font-semibold text-slate-600 hover:text-rose-600 transition">Receptores</a>
+                    <a href="#activacion" class="text-sm font-semibold text-slate-600 hover:text-rose-600 transition">Activación</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Header / Hero -->
+    <header class="pt-32 pb-16 bg-slate-900 text-white text-center">
+        <div class="max-w-4xl mx-auto px-4">
+            <h1 class="text-4xl md:text-5xl font-extrabold mb-6 leading-tight">
+                El Mundo Dinámico de las <span class="text-rose-500">Plaquetas</span>
+            </h1>
+            <p class="text-lg md:text-xl text-slate-300 mb-10 leading-relaxed">
+                Más allá de la hemostasia y la trombosis. Explora la estructura, las vías de activación y el impacto sistémico de las células sanguíneas más pequeñas en la inflamación y la inmunidad.
+            </p>
+            
+            <!-- Key Metrics -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-slate-800/50 p-6 rounded-2xl border border-slate-700">
+                    <div class="text-3xl font-black text-rose-400 mb-1">150k - 350k</div>
+                    <div class="text-sm text-slate-400 font-medium uppercase tracking-wider">Por microlitro (&micro;L)</div>
+                </div>
+                <div class="bg-slate-800/50 p-6 rounded-2xl border border-slate-700">
+                    <div class="text-3xl font-black text-indigo-400 mb-1">2 - 5 &mu;m</div>
+                    <div class="text-sm text-slate-400 font-medium uppercase tracking-wider">Diámetro Promedio</div>
+                </div>
+                <div class="bg-slate-800/50 p-6 rounded-2xl border border-slate-700">
+                    <div class="text-3xl font-black text-emerald-400 mb-1">7 - 10 Días</div>
+                    <div class="text-sm text-slate-400 font-medium uppercase tracking-wider">Vida Media en Sangre</div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-24">
+
+        <!-- Section 1: Anatomía -->
+        <section id="anatomia" class="scroll-mt-24">
+            <div class="mb-8">
+                <h2 class="text-3xl font-bold text-slate-900 border-l-4 border-indigo-600 pl-4">1. Arquitectura y Zonas Plaquetarias</h2>
+                <p class="text-slate-600 mt-4 text-lg max-w-4xl">
+                    Para comprender cómo funciona una plaqueta, primero debemos explorar su compleja estructura interna. Esta sección divide la anatomía plaquetaria en cuatro zonas funcionales distintas. Navega por las pestañas interactivas para descubrir qué elementos biológicos residen en cada compartimento y cuál es su rol fisiológico.
+                </p>
+            </div>
+
+            <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="flex flex-wrap border-b border-slate-200 bg-slate-50">
+                    <button class="tab-btn active flex-1 py-4 px-6 text-sm font-bold text-indigo-700 border-b-2 border-indigo-700 focus:outline-none transition" data-target="tab-periferica">
+                        🌐 Zona Periférica
+                    </button>
+                    <button class="tab-btn flex-1 py-4 px-6 text-sm font-bold text-slate-500 hover:text-slate-800 focus:outline-none transition" data-target="tab-solgel">
+                        🔬 Zona Sol-Gel
+                    </button>
+                    <button class="tab-btn flex-1 py-4 px-6 text-sm font-bold text-slate-500 hover:text-slate-800 focus:outline-none transition" data-target="tab-organelas">
+                        🦠 Zona de Organelas
+                    </button>
+                    <button class="tab-btn flex-1 py-4 px-6 text-sm font-bold text-slate-500 hover:text-slate-800 focus:outline-none transition" data-target="tab-membranas">
+                        ⚙️ Sistemas de Membrana
+                    </button>
+                </div>
+
+                <div class="p-8 md:p-12 min-h-[300px] flex items-center">
+                    <!-- Tab 1 -->
+                    <div id="tab-periferica" class="tab-content active w-full">
+                        <h3 class="text-2xl font-bold text-slate-800 mb-4">El Exterior y la Interacción</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div>
+                                <ul class="space-y-4">
+                                    <li class="flex items-start">
+                                        <span class="text-indigo-600 mr-2 font-bold text-xl">&#8227;</span>
+                                        <div><strong class="text-slate-900 block">Glicocálix</strong> Capa externa rica en azúcares y proteínas. Alberga las glicoproteínas de adhesión (GPIb-IX-V, integrina &alpha;IIb&beta;3).</div>
+                                    </li>
+                                    <li class="flex items-start">
+                                        <span class="text-indigo-600 mr-2 font-bold text-xl">&#8227;</span>
+                                        <div><strong class="text-slate-900 block">Bicapa Lipídica</strong> Contiene Factor Tisular inactivo. Al activarse, expone <em>Fosfatidilserina</em>, acelerando masivamente la coagulación.</div>
+                                    </li>
+                                    <li class="flex items-start">
+                                        <span class="text-indigo-600 mr-2 font-bold text-xl">&#8227;</span>
+                                        <div><strong class="text-slate-900 block">Citoesqueleto Submembrana</strong> Red de actina necesaria para que la plaqueta cambie de forma y movilice receptores en su superficie.</div>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="bg-indigo-50 rounded-2xl p-6 border border-indigo-100 flex flex-col justify-center">
+                                <p class="text-indigo-900 font-medium italic">"Es la primera línea de defensa e interacción. Es aquí donde la plaqueta detecta el daño vascular y decide iniciar la cascada de activación."</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Tab 2 -->
+                    <div id="tab-solgel" class="tab-content w-full">
+                        <h3 class="text-2xl font-bold text-slate-800 mb-4">La Matriz Interna (El Motor)</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div>
+                                <ul class="space-y-4">
+                                    <li class="flex items-start">
+                                        <span class="text-indigo-600 mr-2 font-bold text-xl">&#8227;</span>
+                                        <div><strong class="text-slate-900 block">Microtúbulos</strong> Forman un anillo periférico que mantiene la forma clásica de "disco" en la plaqueta en estado de reposo.</div>
+                                    </li>
+                                    <li class="flex items-start">
+                                        <span class="text-indigo-600 mr-2 font-bold text-xl">&#8227;</span>
+                                        <div><strong class="text-slate-900 block">Microfilamentos de Actina</strong> Mantienen las organelas separadas. Durante la activación, se contraen y empujan los gránulos hacia el centro para ser secretados.</div>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="bg-slate-100 rounded-2xl p-6 border border-slate-200 flex flex-col justify-center">
+                                <p class="text-slate-700 font-medium">Imagina la zona sol-gel como los músculos y el esqueleto de la plaqueta. Transforma su forma de disco a una "estrella" con seudópodos para abarcar más área en un coágulo.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Tab 3 -->
+                    <div id="tab-organelas" class="tab-content w-full">
+                        <h3 class="text-2xl font-bold text-slate-800 mb-4">Almacenamiento y Energía</h3>
+                        <p class="text-slate-600 mb-6">Contiene las estructuras productoras de energía y los arsenales secretores:</p>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                            <div class="bg-white border border-slate-200 p-4 rounded-xl shadow-sm">
+                                <div class="text-xl mb-2">📦</div>
+                                <strong class="text-slate-900 block mb-1">Gránulos</strong>
+                                <p class="text-sm text-slate-600">Alfa, Densos y Lisosomas. (Ver sección siguiente para detalles).</p>
+                            </div>
+                            <div class="bg-white border border-slate-200 p-4 rounded-xl shadow-sm">
+                                <div class="text-xl mb-2">🔋</div>
+                                <strong class="text-slate-900 block mb-1">Glicosomas</strong>
+                                <p class="text-sm text-slate-600">Reservas de glucógeno para proveer energía rápida durante la activación.</p>
+                            </div>
+                            <div class="bg-white border border-slate-200 p-4 rounded-xl shadow-sm">
+                                <div class="text-xl mb-2">⚡</div>
+                                <strong class="text-slate-900 block mb-1">Mitocondrias</strong>
+                                <p class="text-sm text-slate-600">De estructura simple, proveen los requerimientos energéticos basales de la célula.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Tab 4 -->
+                    <div id="tab-membranas" class="tab-content w-full">
+                        <h3 class="text-2xl font-bold text-slate-800 mb-4">Canales y Depósitos Internos</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div>
+                                <ul class="space-y-4">
+                                    <li class="flex items-start">
+                                        <span class="text-indigo-600 mr-2 font-bold text-xl">&#8227;</span>
+                                        <div><strong class="text-slate-900 block">Sistema Canalicular Abierto (SCA)</strong> Túneles que conectan el interior celular con el exterior. Actúan como rutas de evacuación para el contenido de los gránulos y como reserva de membrana para expandirse.</div>
+                                    </li>
+                                    <li class="flex items-start">
+                                        <span class="text-indigo-600 mr-2 font-bold text-xl">&#8227;</span>
+                                        <div><strong class="text-slate-900 block">Sistema Tubular Denso</strong> Remanente del retículo endoplásmico del megacariocito. Es la principal bóveda de almacenamiento de <strong>Calcio</strong> intracelular.</div>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Gránulos -->
+        <section id="granulos" class="scroll-mt-24">
+            <div class="mb-8 border-l-4 border-rose-600 pl-4">
+                <h2 class="text-3xl font-bold text-slate-900">2. El Arsenal Secretor: Gránulos Plaquetarios</h2>
+                <p class="text-slate-600 mt-4 text-lg max-w-4xl">
+                    Las plaquetas son verdaderas "bombas" químicas. Almacenan proteínas, iones y moléculas mensajeras en tres tipos principales de gránulos. Esta sección compara la abundancia y el contenido de los gránulos Alfa (&alpha;), Densos (&delta;) y Lisosomas. Observa en el gráfico la predominancia absoluta de los gránulos Alfa y explora las tarjetas inferiores para conocer el contenido específico (coagulantes vs. activadores) de cada tipo.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <!-- Chart -->
+                <div class="lg:col-span-5 bg-white p-6 rounded-3xl shadow-sm border border-slate-200 flex flex-col justify-center">
+                    <h3 class="text-lg font-bold text-slate-800 mb-2 text-center">Abundancia Promedio por Plaqueta</h3>
+                    <p class="text-sm text-slate-500 mb-6 text-center">Cantidad estimada de gránulos en una plaqueta sana</p>
+                    <div class="chart-container">
+                        <canvas id="granulesChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Info Cards -->
+                <div class="lg:col-span-7 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <!-- Alpha -->
+                    <div class="bg-rose-50 p-6 rounded-2xl border border-rose-100 sm:col-span-2">
+                        <div class="flex items-center justify-between mb-3">
+                            <h4 class="text-xl font-bold text-rose-900">Gránulos Alfa (&alpha;)</h4>
+                            <span class="px-3 py-1 bg-rose-200 text-rose-800 text-xs font-bold rounded-full">50 - 80 unidades</span>
+                        </div>
+                        <p class="text-sm text-rose-800 mb-4">Los más abundantes. Claves para hemostasia, inflamación, angiogénesis e inmunidad.</p>
+                        <div class="text-sm text-rose-900 space-y-2">
+                            <p><strong>Proteínas Clave:</strong> Factor de von Willebrand (FvW), Factores de coagulación V y IX, Fibrinógeno, Trombospondina.</p>
+                            <p><strong>Quimiocinas y Crecimiento:</strong> PF4, IL8, VEGF, PDGF.</p>
+                            <p class="text-xs opacity-80 italic mt-2">Su ausencia o defecto genético causa el "Síndrome de la Plaqueta Gris".</p>
+                        </div>
+                    </div>
+                    <!-- Dense -->
+                    <div class="bg-amber-50 p-6 rounded-2xl border border-amber-100">
+                        <div class="flex items-center justify-between mb-3">
+                            <h4 class="text-xl font-bold text-amber-900">Gránulos Densos (&delta;)</h4>
+                            <span class="px-3 py-1 bg-amber-200 text-amber-800 text-xs font-bold rounded-full">3 - 8 unid.</span>
+                        </div>
+                        <p class="text-sm text-amber-800 mb-4">El motor de amplificación. Contienen las señales rápidas para llamar a más plaquetas.</p>
+                        <div class="text-sm text-amber-900 space-y-2">
+                            <p><strong>Iones y Aminas:</strong> Calcio, Magnesio, Serotonina, Histamina.</p>
+                            <p><strong>Nucleótidos:</strong> ADP, ATP, Polifosfatos.</p>
+                        </div>
+                    </div>
+                    <!-- Lysosomes -->
+                    <div class="bg-slate-100 p-6 rounded-2xl border border-slate-200">
+                        <div class="flex items-center justify-between mb-3">
+                            <h4 class="text-xl font-bold text-slate-800">Lisosomas</h4>
+                            <span class="px-3 py-1 bg-slate-200 text-slate-700 text-xs font-bold rounded-full">&lt; 3 unid.</span>
+                        </div>
+                        <p class="text-sm text-slate-600 mb-4">El sistema de limpieza y remodelación tisular.</p>
+                        <div class="text-sm text-slate-800 space-y-2">
+                            <p><strong>Enzimas Degradativas:</strong> Catepsinas, Elastasa, Fosfatasa ácida.</p>
+                            <p><strong>Función:</strong> Digestión endosomal y limpieza.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Receptores -->
+        <section id="receptores" class="scroll-mt-24">
+            <div class="mb-8 border-l-4 border-emerald-500 pl-4">
+                <h2 class="text-3xl font-bold text-slate-900">3. Glicoproteínas (Receptores) de Superficie</h2>
+                <p class="text-slate-600 mt-4 text-lg max-w-4xl">
+                    Para que una plaqueta pase de ser un ente pasivo a un tapón hemostático activo, requiere sensores y anclajes en su membrana exterior (el Glicocálix). Esta sección cataloga a los "Tres Grandes" receptores. Revisa estas tarjetas para entender cómo la plaqueta se adhiere al vaso dañado (GPIb-IX-V), detecta la lesión profunda (GPVI) y se aglomera con otras plaquetas (Integrina &alpha;IIb&beta;3) para sellar la herida.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Receptor 1 -->
+                <div class="receptor-card bg-white p-8 rounded-3xl border border-slate-200 relative overflow-hidden">
+                    <div class="absolute top-0 right-0 p-4 text-5xl opacity-10">⚓</div>
+                    <div class="text-emerald-600 font-bold tracking-wide text-sm mb-2 uppercase">Adhesión Inicial</div>
+                    <h3 class="text-2xl font-black text-slate-800 mb-4">Complejo GPIb-IX-V</h3>
+                    <p class="text-slate-600 mb-4 leading-relaxed">Actúa como el "gancho" principal. Es vital para frenar y pegar la plaqueta a la pared del vaso cuando la sangre fluye a velocidades extremas (alta fuerza de cizallamiento).</p>
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                        <p class="text-sm text-slate-700"><strong>Ligando Principal:</strong> Factor de von Willebrand (FvW) expuesto por el vaso roto.</p>
+                    </div>
+                </div>
+
+                <!-- Receptor 2 -->
+                <div class="receptor-card bg-white p-8 rounded-3xl border border-slate-200 relative overflow-hidden">
+                    <div class="absolute top-0 right-0 p-4 text-5xl opacity-10">🧬</div>
+                    <div class="text-indigo-600 font-bold tracking-wide text-sm mb-2 uppercase">Señalización Intensa</div>
+                    <h3 class="text-2xl font-black text-slate-800 mb-4">GPVI</h3>
+                    <p class="text-slate-600 mb-4 leading-relaxed">Es el principal receptor de señalización para el colágeno subendotelial. Cuando se une al colágeno, genera señales masivas intracelulares que activan definitivamente a la plaqueta.</p>
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                        <p class="text-sm text-slate-700"><strong>Dato Clave:</strong> Tras la activación, la GPVI se desprende de la membrana para evitar una trombosis descontrolada.</p>
+                    </div>
+                </div>
+
+                <!-- Receptor 3 -->
+                <div class="receptor-card bg-white p-8 rounded-3xl border border-slate-200 relative overflow-hidden">
+                    <div class="absolute top-0 right-0 p-4 text-5xl opacity-10">🧩</div>
+                    <div class="text-rose-600 font-bold tracking-wide text-sm mb-2 uppercase">Agregación Final</div>
+                    <h3 class="text-2xl font-black text-slate-800 mb-4">Integrina &alpha;IIb&beta;3</h3>
+                    <p class="text-slate-600 mb-4 leading-relaxed">El receptor más abundante (~100,000 copias). Permanece "apagado" hasta que una señal <em>inside-out</em> lo enciende. Actúa como velcro para unir plaquetas entre sí.</p>
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                        <p class="text-sm text-slate-700"><strong>Ligando Principal:</strong> Fibrinógeno. Forma puentes entre plaquetas. (Diana de fármacos como Abciximab).</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4: Vías de Activación -->
+        <section id="activacion" class="scroll-mt-24 mb-16">
+            <div class="mb-8 border-l-4 border-amber-500 pl-4">
+                <h2 class="text-3xl font-bold text-slate-900">4. Vías de Activación y Amplificación</h2>
+                <p class="text-slate-600 mt-4 text-lg max-w-4xl">
+                    Además del colágeno estructural, las plaquetas son activadas dinámicamente por moléculas que circulan en el plasma. Dos de los más grandes protagonistas son la <strong>Trombina</strong> (generada externamente) y el <strong>ADP</strong> (secretado por la propia plaqueta). Usa los botones a continuación para simular el paso del estado de "Reposo" a la "Activación Masiva" y visualizar el rol fisiológico y clínico de estas dos vías críticas.
+                </p>
+            </div>
+
+            <div class="bg-white rounded-3xl shadow-md border border-slate-200 overflow-hidden">
+                <!-- Interactive Toggle Header -->
+                <div class="bg-slate-900 p-6 flex flex-col sm:flex-row justify-between items-center text-white">
+                    <div class="mb-4 sm:mb-0">
+                        <h3 class="text-xl font-bold">Estado Plaquetario: <span id="state-label" class="text-sky-400">Reposo</span></h3>
+                        <p class="text-sm text-slate-400">Haz clic en el botón para activar la tormenta de señales.</p>
+                    </div>
+                    <button id="btn-toggle-state" class="px-6 py-3 bg-sky-500 hover:bg-sky-400 text-white font-bold rounded-full transition shadow-lg shadow-sky-500/30 transform active:scale-95">
+                        Activar Plaquetas ⚡
+                    </button>
+                </div>
+
+                <!-- Pathways Content -->
+                <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-12">
+                    
+                    <!-- Thrombin Pathway -->
+                    <div class="pathway-block transition-opacity duration-500" id="path-thrombin">
+                        <div class="flex items-center space-x-3 mb-6">
+                            <div class="h-12 w-12 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center text-2xl font-bold">T</div>
+                            <h4 class="text-2xl font-bold text-slate-800">La Trombina</h4>
+                        </div>
+                        <p class="text-slate-600 mb-6 font-medium">El agonista y activador más potente del cuerpo humano. Generado por la cascada de coagulación (Factor Tisular).</p>
+                        
+                        <div class="space-y-4">
+                            <div class="p-4 rounded-xl border border-slate-200 bg-slate-50 relative overflow-hidden transition-all duration-300 state-item">
+                                <div class="absolute left-0 top-0 bottom-0 w-1 bg-slate-300 state-indicator"></div>
+                                <h5 class="font-bold text-slate-800 mb-1">Receptores PAR (Activados por Proteasas)</h5>
+                                <p class="text-sm text-slate-600">
+                                    <span class="block mb-1">🔹 <strong>PAR-1:</strong> Extremadamente sensible. Se activa con cantidades muy bajas de trombina.</span>
+                                    <span class="block">🔹 <strong>PAR-4:</strong> Se activa sólo ante altas concentraciones de trombina.</span>
+                                </p>
+                            </div>
+                            
+                            <div class="p-4 rounded-xl border border-slate-200 bg-rose-50/50 relative overflow-hidden transition-all duration-300 state-item">
+                                <div class="absolute left-0 top-0 bottom-0 w-1 bg-rose-300 state-indicator"></div>
+                                <h5 class="font-bold text-rose-900 mb-1">Relevancia Clínica 💊</h5>
+                                <p class="text-sm text-rose-800">El fármaco <strong>Vorapaxar</strong> bloquea el receptor PAR-1, impidiendo que la trombina active a las plaquetas en pacientes con alto riesgo de infarto.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ADP Pathway -->
+                    <div class="pathway-block transition-opacity duration-500" id="path-adp">
+                        <div class="flex items-center space-x-3 mb-6">
+                            <div class="h-12 w-12 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center text-2xl font-bold">A</div>
+                            <h4 class="text-2xl font-bold text-slate-800">El ADP</h4>
+                        </div>
+                        <p class="text-slate-600 mb-6 font-medium">El gran "amplificador". Liberado masivamente por los gránulos densos de las primeras plaquetas para llamar refuerzos.</p>
+                        
+                        <div class="space-y-4">
+                            <div class="p-4 rounded-xl border border-slate-200 bg-slate-50 relative overflow-hidden transition-all duration-300 state-item">
+                                <div class="absolute left-0 top-0 bottom-0 w-1 bg-slate-300 state-indicator"></div>
+                                <h5 class="font-bold text-slate-800 mb-1">Receptores P2Y</h5>
+                                <p class="text-sm text-slate-600">
+                                    <span class="block mb-1">🔹 <strong>P2Y₁:</strong> Inicia la agregación y el cambio de forma (efecto débil y reversible).</span>
+                                    <span class="block">🔹 <strong>P2Y₁₂:</strong> Amplifica y estabiliza fuertemente el coágulo para que sea duradero.</span>
+                                </p>
+                            </div>
+                            
+                            <div class="p-4 rounded-xl border border-slate-200 bg-amber-50/50 relative overflow-hidden transition-all duration-300 state-item">
+                                <div class="absolute left-0 top-0 bottom-0 w-1 bg-amber-300 state-indicator"></div>
+                                <h5 class="font-bold text-amber-900 mb-1">Relevancia Clínica 💊</h5>
+                                <p class="text-sm text-amber-800">El receptor P2Y₁₂ es la diana de antiagregantes globales (prevención de trombosis en stents): <strong>Clopidogrel, Prasugrel y Ticagrelor</strong>.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-slate-900 text-slate-400 py-10 text-center border-t border-slate-800">
+        <div class="max-w-4xl mx-auto px-4">
+            <p class="text-sm mb-2">Basado en el informe: <strong>"Platelet Physiology"</strong> de Thomas Gremmel, Andrew L. Frelinger III y Alan D. Michelson.</p>
+            <p class="text-xs text-slate-500">Diseñado para la comprensión clínica y biológica de la fisiología celular, los procesos aterotrombóticos y los blancos terapéuticos.</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript Logic -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            // 1. Tab Interaction Logic (Anatomy)
+            const tabBtns = document.querySelectorAll('.tab-btn');
+            const tabContents = document.querySelectorAll('.tab-content');
+
+            tabBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    // Remove active states
+                    tabBtns.forEach(b => {
+                        b.classList.remove('active', 'text-indigo-700', 'border-b-2', 'border-indigo-700');
+                        b.classList.add('text-slate-500');
+                    });
+                    tabContents.forEach(c => c.classList.remove('active'));
+
+                    // Set active state on clicked
+                    btn.classList.add('active', 'text-indigo-700', 'border-b-2', 'border-indigo-700');
+                    btn.classList.remove('text-slate-500');
+                    
+                    const targetId = btn.getAttribute('data-target');
+                    document.getElementById(targetId).classList.add('active');
+                });
+            });
+
+            // 2. Chart.js (Granules Comparison)
+            const ctx = document.getElementById('granulesChart').getContext('2d');
+            const granulesChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Gránulos Alfa (α)', 'Gránulos Densos (δ)', 'Lisosomas'],
+                    datasets: [{
+                        label: 'Cantidad promedio por Plaqueta',
+                        data: [65, 5.5, 1.5], // Average values based on report (50-80, 3-8, <3)
+                        backgroundColor: [
+                            '#e11d48', // rose-600
+                            '#d97706', // amber-600
+                            '#64748b'  // slate-500
+                        ],
+                        borderRadius: 6,
+                        borderSkipped: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ` Promedio: ${context.raw} gránulos/célula`;
+                                }
+                            },
+                            titleFont: { family: 'Inter', size: 14 },
+                            bodyFont: { family: 'Inter', size: 13 },
+                            padding: 10
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: '#f1f5f9', // slate-100
+                                drawBorder: false
+                            },
+                            ticks: {
+                                font: { family: 'Inter' },
+                                color: '#64748b'
+                            }
+                        },
+                        x: {
+                            grid: { display: false },
+                            ticks: {
+                                font: { family: 'Inter', weight: '600' },
+                                color: '#334155'
+                            }
+                        }
+                    }
+                }
+            });
+
+            // 3. Activation State Interaction
+            const toggleBtn = document.getElementById('btn-toggle-state');
+            const stateLabel = document.getElementById('state-label');
+            const stateIndicators = document.querySelectorAll('.state-indicator');
+            const stateItems = document.querySelectorAll('.state-item');
+            
+            let isActivated = false;
+
+            toggleBtn.addEventListener('click', () => {
+                isActivated = !isActivated;
+
+                if (isActivated) {
+                    // Update to Active State
+                    stateLabel.textContent = "¡Cascada de Activación!";
+                    stateLabel.classList.replace('text-sky-400', 'text-rose-500');
+                    
+                    toggleBtn.textContent = "Volver a Reposo 🔄";
+                    toggleBtn.classList.replace('bg-sky-500', 'bg-rose-600');
+                    toggleBtn.classList.replace('hover:bg-sky-400', 'hover:bg-rose-500');
+                    toggleBtn.classList.replace('shadow-sky-500/30', 'shadow-rose-600/30');
+
+                    // Highlight pathway blocks
+                    stateItems.forEach(item => {
+                        item.classList.add('shadow-md', 'scale-[1.02]', 'border-slate-300');
+                    });
+                    
+                    // Specific highlight colors
+                    stateIndicators[0].classList.replace('bg-slate-300', 'bg-rose-500');
+                    stateIndicators[1].classList.replace('bg-rose-300', 'bg-rose-600');
+                    stateIndicators[2].classList.replace('bg-slate-300', 'bg-amber-500');
+                    stateIndicators[3].classList.replace('bg-amber-300', 'bg-amber-600');
+
+                } else {
+                    // Revert to Resting State
+                    stateLabel.textContent = "Reposo";
+                    stateLabel.classList.replace('text-rose-500', 'text-sky-400');
+                    
+                    toggleBtn.textContent = "Activar Plaquetas ⚡";
+                    toggleBtn.classList.replace('bg-rose-600', 'bg-sky-500');
+                    toggleBtn.classList.replace('hover:bg-rose-500', 'hover:bg-sky-400');
+                    toggleBtn.classList.replace('shadow-rose-600/30', 'shadow-sky-500/30');
+
+                    // Remove highlights
+                    stateItems.forEach(item => {
+                        item.classList.remove('shadow-md', 'scale-[1.02]', 'border-slate-300');
+                    });
+
+                    // Reset indicator colors
+                    stateIndicators[0].classList.replace('bg-rose-500', 'bg-slate-300');
+                    stateIndicators[1].classList.replace('bg-rose-600', 'bg-rose-300');
+                    stateIndicators[2].classList.replace('bg-amber-500', 'bg-slate-300');
+                    stateIndicators[3].classList.replace('bg-amber-600', 'bg-amber-300');
+                }
+            });
+
+        });
+    </script>
+</body>
+</html>

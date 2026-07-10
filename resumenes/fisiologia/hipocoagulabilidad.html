@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HemoStudy: Hipocoagulabilidad</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Chosen Palette: Warm Medical Minimalist (Neutros cálidos #F8FAFC, Azul clínico #1E40AF, Granate #991B1B) -->
+    <!-- Application Structure Plan: La SPA utiliza una estructura de 'Dashboard Educativo' dividida en tres secciones lógicas navegables: 1. Mapa de Clasificación (para organizar mentalmente los trastornos), 2. Clínica Comparada (para contrastar síntomas clave), y 3. Simulador de Laboratorio (para interactuar con las variaciones de TP/TTPA según la patología). Esta estructura se elige porque facilita el estudio escalonado: primero la etiología, luego la presentación clínica, y finalmente el diagnóstico biológico. -->
+    <!-- Visualization & Content Choices: 1. Tarjetas interactivas desplegables (HTML/JS) para la clasificación (Goal: Organize). 2. Cuadros comparativos estilo Kanban para síntomas (Goal: Compare). 3. Gráfico de Barras Chart.js para simular el TP y TTPA (Goal: Compare/Inform), permitiendo al usuario ver dinámicamente cómo responde el laboratorio a cada enfermedad. 4. Uso de emojis tipográficos en lugar de iconos externos para cumplir con la restricción de NO SVG. Confirmando cumplimiento: NO SVG, NO Mermaid. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F8FAFC;
+            color: #1E293B;
+        }
+
+        /* Estilos obligatorios para el contenedor del gráfico */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+        }
+
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+
+        .tab-active {
+            border-bottom: 3px solid #991B1B;
+            color: #991B1B;
+            font-weight: 700;
+        }
+
+        .tab-inactive {
+            border-bottom: 3px solid transparent;
+            color: #64748B;
+            font-weight: 600;
+        }
+
+        .tab-inactive:hover {
+            color: #0F172A;
+            border-bottom: 3px solid #CBD5E1;
+        }
+
+        /* Utilidad para ocultar scrollbars */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="antialiased flex flex-col min-h-screen">
+
+    <!-- Navegación -->
+    <nav class="bg-white border-b border-slate-200 sticky top-0 z-50 shadow-sm">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 bg-blue-800 text-white rounded-lg flex items-center justify-center font-black text-xl">H</div>
+                    <span class="font-extrabold text-xl tracking-tight text-slate-900">Hemo<span class="text-red-700">Study</span></span>
+                    <span class="ml-2 px-2 py-1 bg-red-100 text-red-800 text-xs font-bold rounded-full hidden sm:block">Hipocoagulabilidad</span>
+                </div>
+                <div class="flex items-center space-x-4 sm:space-x-8 overflow-x-auto no-scrollbar">
+                    <button onclick="switchTab('clasificacion')" id="btn-clasificacion" class="tab-active py-5 px-1 whitespace-nowrap transition-colors duration-200 text-sm sm:text-base">1. Clasificación</button>
+                    <button onclick="switchTab('clinica')" id="btn-clinica" class="tab-inactive py-5 px-1 whitespace-nowrap transition-colors duration-200 text-sm sm:text-base">2. Clínica</button>
+                    <button onclick="switchTab('laboratorio')" id="btn-laboratorio" class="tab-inactive py-5 px-1 whitespace-nowrap transition-colors duration-200 text-sm sm:text-base">3. Laboratorio</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Contenido Principal -->
+    <main class="flex-grow w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- SECCIÓN 1: CLASIFICACIÓN -->
+        <section id="sec-clasificacion" class="block animate-fade-in">
+            <div class="mb-8">
+                <h1 class="text-3xl sm:text-4xl font-extrabold text-slate-900 mb-4">Mapa de Diátesis Hemorrágicas</h1>
+                <p class="text-lg text-slate-600 max-w-3xl leading-relaxed">
+                    Esta sección organiza los trastornos de hipocoagulabilidad según su etiología. Comprender si el defecto es en la <strong>síntesis</strong> de factores, por <strong>consumo</strong> masivo o por presencia de <strong>inhibidores</strong> es el primer paso crítico para el diagnóstico fisiopatológico. Explora cada categoría haciendo clic en ellas.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Tarjeta 1 -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-md transition-shadow">
+                    <button onclick="toggleCard('card-cong')" class="w-full text-left p-6 bg-blue-50 hover:bg-blue-100 transition-colors flex justify-between items-center">
+                        <div>
+                            <span class="text-2xl mr-2">🧬</span>
+                            <h2 class="inline text-xl font-bold text-blue-900">Déficit de Síntesis Congénito</h2>
+                        </div>
+                        <span class="text-blue-500 font-bold text-xl" id="icon-card-cong">+</span>
+                    </button>
+                    <div id="card-cong" class="hidden p-6 border-t border-slate-100">
+                        <ul class="space-y-4">
+                            <li class="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                                <strong class="text-slate-800 text-lg block mb-1">Hemofilia A y B</strong>
+                                <p class="text-sm text-slate-600">Trastornos ligados al cromosoma X. Déficit de Factor VIII (A) o Factor IX (B). Caracterizados por sangrados profundos y hemartrosis. Tratamiento sustitutivo.</p>
+                            </li>
+                            <li class="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                                <strong class="text-slate-800 text-lg block mb-1">Enfermedad de von Willebrand</strong>
+                                <p class="text-sm text-slate-600">Autosómica dominante (afecta a ambos sexos). Es la coagulopatía más frecuente (1%). Falla el FvW (adhesión plaquetaria y transporte del FVIII).</p>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Tarjeta 2 -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-md transition-shadow">
+                    <button onclick="toggleCard('card-adq')" class="w-full text-left p-6 bg-orange-50 hover:bg-orange-100 transition-colors flex justify-between items-center">
+                        <div>
+                            <span class="text-2xl mr-2">💊</span>
+                            <h2 class="inline text-xl font-bold text-orange-900">Déficit de Síntesis Adquirido</h2>
+                        </div>
+                        <span class="text-orange-500 font-bold text-xl" id="icon-card-adq">+</span>
+                    </button>
+                    <div id="card-adq" class="hidden p-6 border-t border-slate-100">
+                        <ul class="space-y-4">
+                            <li class="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                                <strong class="text-slate-800 text-lg block mb-1">Déficit de Vitamina K</strong>
+                                <p class="text-sm text-slate-600">Fallo en la gammacarboxilación de factores II, VII, IX, X. Causas: Dicumarínicos (Warfarina), uso de antibióticos prolongados, malabsorción. El Tiempo de Protrombina (TP) se alarga primero.</p>
+                            </li>
+                            <li class="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                                <strong class="text-slate-800 text-lg block mb-1">Hepatopatías graves</strong>
+                                <p class="text-sm text-slate-600">El hígado enfermo deja de sintetizar factores. A diferencia del déficit de Vit. K, aquí también disminuye el Factor V. Es el trastorno adquirido más común globalmente.</p>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Tarjeta 3 -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-md transition-shadow">
+                    <button onclick="toggleCard('card-cons')" class="w-full text-left p-6 bg-red-50 hover:bg-red-100 transition-colors flex justify-between items-center">
+                        <div>
+                            <span class="text-2xl mr-2">🚨</span>
+                            <h2 class="inline text-xl font-bold text-red-900">Trastornos por Consumo</h2>
+                        </div>
+                        <span class="text-red-500 font-bold text-xl" id="icon-card-cons">+</span>
+                    </button>
+                    <div id="card-cons" class="hidden p-6 border-t border-slate-100">
+                        <div class="bg-red-50/50 p-4 rounded-xl border border-red-100">
+                            <strong class="text-red-800 text-lg block mb-2">Coagulación Intravascular Diseminada (CID)</strong>
+                            <p class="text-sm text-slate-700 mb-3">Síndrome secundario a sepsis, traumas masivos o neoplasias. Se caracteriza por una tormenta de trombina que genera microtrombos diseminados.</p>
+                            <div class="text-xs text-red-900 font-medium bg-red-100 p-2 rounded">
+                                ↳ Paradoja fatal: Isquemia multiorgánica (trombosis) + Sangrado masivo (por agotamiento de plaquetas y factores).
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tarjeta 4 -->
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-md transition-shadow">
+                    <button onclick="toggleCard('card-inh')" class="w-full text-left p-6 bg-purple-50 hover:bg-purple-100 transition-colors flex justify-between items-center">
+                        <div>
+                            <span class="text-2xl mr-2">🛡️</span>
+                            <h2 class="inline text-xl font-bold text-purple-900">Presencia de Inhibidores</h2>
+                        </div>
+                        <span class="text-purple-500 font-bold text-xl" id="icon-card-inh">+</span>
+                    </button>
+                    <div id="card-inh" class="hidden p-6 border-t border-slate-100">
+                        <ul class="space-y-4">
+                            <li class="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                                <strong class="text-slate-800 text-lg block mb-1">Síndrome Antifosfolípido (SAF)</strong>
+                                <p class="text-sm text-slate-600">Presencia de anticuerpos (ej. Anticoagulante lúpico). <span class="font-bold text-purple-700">Paradoja de Laboratorio:</span> Alarga el TTPA in vitro, pero in vivo causa TROMBOSIS arterio-venosas y abortos recurrentes, no hemorragia.</p>
+                            </li>
+                            <li class="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                                <strong class="text-slate-800 text-lg block mb-1">Hemofilia Adquirida</strong>
+                                <p class="text-sm text-slate-600">Desarrollo repentino de autoanticuerpos contra el FVIII en personas sanas. Sangrados graves con TTPA alargado que NO corrige en prueba de mezcla.</p>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECCIÓN 2: CLÍNICA COMPARADA -->
+        <section id="sec-clinica" class="hidden animate-fade-in">
+            <div class="mb-8">
+                <h1 class="text-3xl sm:text-4xl font-extrabold text-slate-900 mb-4">Correlación Clínica</h1>
+                <p class="text-lg text-slate-600 max-w-3xl leading-relaxed">
+                    La historia clínica y la semiología del sangrado son suficientes para orientar si el paciente sufre un defecto de la <strong>Hemostasia Primaria</strong> (plaquetas/vaso) o de la <strong>Hemostasia Secundaria</strong> (factores de coagulación). Esta sección contrasta visualmente ambas presentaciones, esenciales para el diagnóstico diferencial.
+                </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Columna Hemostasia Primaria -->
+                <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-200">
+                    <div class="text-center mb-6">
+                        <div class="text-5xl mb-4">🩸</div>
+                        <h2 class="text-2xl font-bold text-slate-800">Fallo en Hemostasia Primaria</h2>
+                        <p class="text-sm text-slate-500 mt-2">Déficit de Plaquetas o Enf. de von Willebrand</p>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <div class="flex items-start">
+                            <span class="text-xl mr-3 mt-1">⏱️</span>
+                            <div>
+                                <h4 class="font-bold text-slate-800">Inicio del sangrado</h4>
+                                <p class="text-sm text-slate-600"><strong>Inmediato</strong> tras cortes o traumas superficiales.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start">
+                            <span class="text-xl mr-3 mt-1">🔴</span>
+                            <div>
+                                <h4 class="font-bold text-slate-800">Lesiones típicas cutáneas</h4>
+                                <p class="text-sm text-slate-600"><strong>Petequias</strong> (puntos rojos), púrpura, equimosis superficiales múltiples.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start">
+                            <span class="text-xl mr-3 mt-1">👄</span>
+                            <div>
+                                <h4 class="font-bold text-slate-800">Sangrado en mucosas</h4>
+                                <p class="text-sm text-slate-600"><strong>Muy frecuente.</strong> Epistaxis (nariz), gingivorragias (encías), menorragias (flujo menstrual abundante).</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-8 p-4 bg-slate-50 rounded-xl border border-slate-200">
+                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">Enfermedad Emblema</span>
+                        <strong class="text-blue-800">Enfermedad de von Willebrand</strong>
+                    </div>
+                </div>
+
+                <!-- Columna Hemostasia Secundaria -->
+                <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-200">
+                    <div class="text-center mb-6">
+                        <div class="text-5xl mb-4">🦵</div>
+                        <h2 class="text-2xl font-bold text-slate-800">Fallo en Hemostasia Secundaria</h2>
+                        <p class="text-sm text-slate-500 mt-2">Déficit de Factores de Coagulación</p>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <div class="flex items-start">
+                            <span class="text-xl mr-3 mt-1">⏳</span>
+                            <div>
+                                <h4 class="font-bold text-slate-800">Inicio del sangrado</h4>
+                                <p class="text-sm text-slate-600"><strong>Tardío.</strong> Puede sangrar horas o un día después del trauma inicial o extracción dental.</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start">
+                            <span class="text-xl mr-3 mt-1">🟣</span>
+                            <div>
+                                <h4 class="font-bold text-slate-800">Lesiones típicas cutáneas</h4>
+                                <p class="text-sm text-slate-600"><strong>Grandes hematomas</strong> profundos. (Las petequias son extremadamente raras).</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start">
+                            <span class="text-xl mr-3 mt-1">🦴</span>
+                            <div>
+                                <h4 class="font-bold text-slate-800">Sangrado articular/muscular</h4>
+                                <p class="text-sm text-slate-600"><strong>Hemartrosis</strong> (sangre destructiva en rodillas, tobillos) y hematomas musculares (ej. Psoas).</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-8 p-4 bg-slate-50 rounded-xl border border-slate-200">
+                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">Enfermedad Emblema</span>
+                        <strong class="text-red-800">Hemofilia (A o B)</strong>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECCIÓN 3: LABORATORIO INTERACTIVO -->
+        <section id="sec-laboratorio" class="hidden animate-fade-in">
+            <div class="mb-8">
+                <h1 class="text-3xl sm:text-4xl font-extrabold text-slate-900 mb-4">Simulador de Pruebas de Coagulación</h1>
+                <p class="text-lg text-slate-600 max-w-3xl leading-relaxed">
+                    Comprender el <strong>Tiempo de Protrombina (TP)</strong> (vía extrínseca) y el <strong>Tiempo de Tromboplastina Parcial Activada (TTPA)</strong> (vía intrínseca) es esencial. Selecciona una patología en el selector para observar dinámicamente cómo se alteran los tiempos y leer la explicación fisiopatológica de los resultados.
+                </p>
+            </div>
+
+            <div class="flex flex-col lg:flex-row gap-8">
+                <!-- Panel de Control y Contexto -->
+                <div class="w-full lg:w-1/3 flex flex-col gap-6">
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                        <label for="disease-selector" class="block text-sm font-bold text-slate-700 mb-2 uppercase tracking-wide">Seleccionar Patología:</label>
+                        <select id="disease-selector" onchange="updateLabSim()" class="w-full bg-slate-50 border border-slate-300 text-slate-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-3 shadow-inner cursor-pointer font-medium">
+                            <option value="normal">Paciente Sano (Referencia)</option>
+                            <option value="hemofilia">Hemofilia A o B</option>
+                            <option value="vwd">Enfermedad de von Willebrand</option>
+                            <option value="vitk">Déficit Vitamina K (o Warfarina)</option>
+                            <option value="hepatopatia">Hepatopatía Severa</option>
+                            <option value="cid">Coagulación Intravascular Diseminada (CID)</option>
+                            <option value="saf">Síndrome Antifosfolípido (SAF)</option>
+                        </select>
+                    </div>
+
+                    <!-- Cuadro Clínico Dinámico -->
+                    <div class="bg-blue-900 text-white p-6 rounded-2xl shadow-md flex-grow flex flex-col">
+                        <div class="flex items-center gap-2 mb-4 opacity-80">
+                            <span class="text-xl">📋</span>
+                            <h3 class="font-bold uppercase tracking-wider text-sm">Resumen del Laboratorio</h3>
+                        </div>
+                        <h4 id="desc-title" class="text-2xl font-black mb-4">Normal</h4>
+                        <div class="space-y-4 mb-6">
+                            <div class="bg-blue-800/50 p-3 rounded-lg border border-blue-700/50">
+                                <span class="text-blue-300 text-xs font-bold uppercase block">Plaquetas</span>
+                                <span id="desc-plt" class="text-lg font-semibold">150,000 - 450,000 /uL (Normales)</span>
+                            </div>
+                            <div class="bg-blue-800/50 p-3 rounded-lg border border-blue-700/50">
+                                <span class="text-blue-300 text-xs font-bold uppercase block">Otros hallazgos</span>
+                                <span id="desc-others" class="text-sm font-medium">Sin alteraciones relevantes.</span>
+                            </div>
+                        </div>
+                        <p id="desc-physio" class="text-blue-100 text-sm leading-relaxed mt-auto border-t border-blue-800 pt-4">
+                            Paciente fisiológicamente estable. Las vías intrínseca y extrínseca de la hemostasia secundaria están intactas.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Contenedor del Gráfico -->
+                <div class="w-full lg:w-2/3 bg-white p-6 md:p-8 rounded-3xl shadow-sm border border-slate-200">
+                    <div class="mb-6 flex flex-wrap justify-between items-end gap-4 border-b border-slate-100 pb-4">
+                        <div>
+                            <h3 class="text-xl font-bold text-slate-800">Tiempos de Coagulación</h3>
+                            <p class="text-sm text-slate-500">Valores referenciales en segundos.</p>
+                        </div>
+                        
+                        <!-- Ayuda visual: Prueba de mezcla -->
+                        <div id="mezcla-alert" class="hidden bg-slate-100 px-4 py-2 rounded-xl border border-slate-300 flex items-center gap-2">
+                            <span class="text-lg">🧪</span>
+                            <div class="text-xs text-slate-700">
+                                <strong class="block">Prueba de Mezcla:</strong>
+                                <span id="mezcla-text">Corrige (Déficit de factor)</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="chart-container">
+                        <canvas id="coagChart"></canvas>
+                    </div>
+
+                    <div class="mt-6 flex flex-wrap justify-center gap-6 text-sm text-slate-600">
+                        <div class="flex items-center gap-2">
+                            <div class="w-4 h-4 bg-red-700 rounded-sm"></div>
+                            <span><strong>TP</strong> (Vía Extrínseca: F. VII)</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <div class="w-4 h-4 bg-blue-800 rounded-sm"></div>
+                            <span><strong>TTPA</strong> (Vía Intrínseca: F. VIII, IX, XI, XII)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-slate-900 text-slate-400 py-8 mt-auto border-t border-slate-800">
+        <div class="max-w-6xl mx-auto px-4 text-center">
+            <p class="text-sm font-medium mb-2">HemoStudy - Herramienta Educativa de Hematología Clínica</p>
+            <p class="text-xs opacity-75">Diseñado con Tailwind CSS y Chart.js. Basado en guías de Fisiopatología de la Coagulación.</p>
+        </div>
+    </footer>
+
+    <!-- LOGICA DE LA APLICACIÓN -->
+    <script>
+        // --- 1. NAVEGACIÓN (Tabs) ---
+        function switchTab(tabId) {
+            // Ocultar todas las secciones
+            ['clasificacion', 'clinica', 'laboratorio'].forEach(id => {
+                document.getElementById('sec-' + id).classList.add('hidden');
+                document.getElementById('btn-' + id).classList.replace('tab-active', 'tab-inactive');
+            });
+
+            // Mostrar la sección seleccionada
+            document.getElementById('sec-' + tabId).classList.remove('hidden');
+            document.getElementById('btn-' + tabId).classList.replace('tab-inactive', 'tab-active');
+
+            // Si es laboratorio, forzar renderizado del chart para evitar glitches de tamaño
+            if(tabId === 'laboratorio' && window.coagChartInstance) {
+                window.coagChartInstance.update();
+            }
+        }
+
+        // --- 2. TARJETAS DESPLEGABLES (Acordeón Clasificación) ---
+        function toggleCard(cardId) {
+            const card = document.getElementById(cardId);
+            const icon = document.getElementById('icon-' + cardId);
+            
+            if (card.classList.contains('hidden')) {
+                card.classList.remove('hidden');
+                icon.textContent = '-';
+            } else {
+                card.classList.add('hidden');
+                icon.textContent = '+';
+            }
+        }
+
+        // --- 3. BASE DE DATOS CLINICA (Manejo del Estado) ---
+        const labData = {
+            'normal': {
+                tp: 12, ttpa: 30, maxVal: 50,
+                title: 'Paciente Fisiológico',
+                plt: '250,000 /uL (Normales)',
+                others: 'Dímero D Negativo. Fibrinógeno 200-400 mg/dL.',
+                physio: 'Paciente sin alteraciones de la hemostasia. La vía extrínseca (medida por el TP) y la vía intrínseca (medida por el TTPA) operan dentro de los rangos fisiológicos normales.',
+                mezcla: null
+            },
+            'hemofilia': {
+                tp: 12, ttpa: 85, maxVal: 100,
+                title: 'Hemofilia Severa',
+                plt: '250,000 /uL (Normales)',
+                others: 'Factor VIII:C o IX:C indetectable (<1%).',
+                physio: 'El déficit genético severo de Factores VIII (A) o IX (B) interrumpe la fase de propagación en la vía intrínseca. El TP permanece normal porque la vía extrínseca (Factor VII) está intacta.',
+                mezcla: 'SÍ Corrige (Déficit de factor)'
+            },
+            'vwd': {
+                tp: 12, ttpa: 45, maxVal: 60,
+                title: 'Enf. von Willebrand (Severa/Tipo 2N)',
+                plt: 'Normales o ligeramente bajas (Tipo 2B)',
+                others: 'Tiempo Hemorragia alargado. Agregación con Ristocetina alterada.',
+                physio: 'El Factor von Willebrand sirve de transporte y protección al Factor VIII. Su déficit o defecto severo provoca una degradación rápida del FVIII, resultando en un TTPA ligera a moderadamente alargado, acompañado de sangrado mucocutáneo por falla en la adhesión plaquetaria.',
+                mezcla: 'SÍ Corrige'
+            },
+            'vitk': {
+                tp: 45, ttpa: 35, maxVal: 60,
+                title: 'Déficit Vitamina K / Warfarina',
+                plt: '250,000 /uL (Normales)',
+                others: 'Factores dependientes de Vit K disminuidos (II, VII, IX, X). Factor V normal.',
+                physio: 'La falta de gammacarboxilación inactiva los factores dependientes de Vit K (1972). Se altera PRIMERO el Tiempo de Protrombina (TP) porque el Factor VII tiene la vida media más corta en el plasma (aprox. 6h).',
+                mezcla: 'SÍ Corrige'
+            },
+            'hepatopatia': {
+                tp: 50, ttpa: 55, maxVal: 70,
+                title: 'Falla Hepática Severa',
+                plt: '90,000 /uL (Disminuidas por hiperesplenismo)',
+                others: 'Disminución del Factor V (marcador clave). Hipoalbuminemia.',
+                physio: 'El hígado enfermo cesa la síntesis de casi todos los factores (excepto FvW). A diferencia del déficit de Vitamina K, aquí también cae drásticamente el Factor V, alargando ambos tiempos. El hiperesplenismo causa trombocitopenia.',
+                mezcla: 'SÍ Corrige'
+            },
+            'cid': {
+                tp: 60, ttpa: 80, maxVal: 100,
+                title: 'C.I.D. (Fase Consuntiva)',
+                plt: '< 50,000 /uL (Consumo masivo)',
+                others: 'Fibrinógeno MUY BAJO. Dímero D MUY ALTO. Esquistocitos.',
+                physio: 'Una tormenta de Trombina por liberación masiva de Factor Tisular (sepsis/trauma) crea microtrombos sistémicos. Esto AGOTA agresivamente las plaquetas y todos los factores de coagulación, alargando críticamente ambos tiempos y generando hemorragia masiva.',
+                mezcla: 'SÍ Corrige (Parcialmente)'
+            },
+            'saf': {
+                tp: 12, ttpa: 75, maxVal: 100,
+                title: 'Síndrome Antifosfolípido (SAF)',
+                plt: '120,000 /uL (Trombocitopenia leve común)',
+                others: 'Anticuerpos Anticardiolipina / Anticoagulante Lúpico (+)',
+                physio: '¡Paradoja Clásica! Los autoanticuerpos destruyen los fosfolípidos reactivos del tubo de ensayo in vitro, alargando el TTPA artificialmente. Sin embargo, in vivo, el estado es altamente PROTROMBÓTICO (abortos, TVP).',
+                mezcla: 'NO CORRIGE (Presencia de inhibidor)'
+            }
+        };
+
+        // --- 4. GRAFICO (Chart.js) ---
+        let coagChartInstance = null;
+
+        function initChart() {
+            const ctx = document.getElementById('coagChart').getContext('2d');
+            
+            // Configuración inicial del gráfico usando el estado "normal"
+            const initData = labData['normal'];
+
+            coagChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['TP (Segundos)', 'TTPA (Segundos)'],
+                    datasets: [{
+                        label: 'Valor del Paciente',
+                        data: [initData.tp, initData.ttpa],
+                        backgroundColor: [
+                            '#991B1B', // Granate para TP (Vía Extrínseca - Rápida)
+                            '#1E40AF'  // Azul para TTPA (Vía Intrínseca - Compleja)
+                        ],
+                        borderRadius: 8,
+                        barPercentage: 0.6,
+                    },
+                    {
+                        label: 'Límite Superior Normal',
+                        type: 'line',
+                        data: [15, 35], // Valores umbral normales aprox.
+                        borderColor: '#94A3B8',
+                        borderWidth: 2,
+                        borderDash: [5, 5],
+                        pointRadius: 0,
+                        fill: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false, // Fundamental para el contenedor restrictivo
+                    animation: {
+                        duration: 800,
+                        easing: 'easeOutQuart'
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: '#1E293B',
+                            titleFont: { size: 14, family: 'Inter' },
+                            bodyFont: { size: 14, family: 'Inter' },
+                            padding: 12,
+                            cornerRadius: 8,
+                            callbacks: {
+                                label: function(context) {
+                                    if(context.datasetIndex === 0) {
+                                        return `Valor: ${context.parsed.y} seg`;
+                                    }
+                                    return `Límite Normal: ${context.parsed.y} seg`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: initData.maxVal,
+                            grid: {
+                                color: '#F1F5F9',
+                                drawBorder: false
+                            },
+                            ticks: {
+                                font: { family: 'Inter', size: 12 },
+                                color: '#64748B'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            },
+                            ticks: {
+                                font: { family: 'Inter', weight: 'bold', size: 13 },
+                                color: '#334155'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // --- 5. ACTUALIZAR SIMULADOR (Interacción) ---
+        function updateLabSim() {
+            const selector = document.getElementById('disease-selector');
+            const selectedKey = selector.value;
+            const data = labData[selectedKey];
+
+            if(!data) return;
+
+            // Actualizar Gráfico
+            coagChartInstance.data.datasets[0].data = [data.tp, data.ttpa];
+            coagChartInstance.options.scales.y.max = data.maxVal; // Ajustar escala para mejor visibilidad
+            coagChartInstance.update();
+
+            // Actualizar Textos Descriptivos
+            document.getElementById('desc-title').textContent = data.title;
+            document.getElementById('desc-plt').textContent = data.plt;
+            document.getElementById('desc-others').textContent = data.others;
+            document.getElementById('desc-physio').textContent = data.physio;
+
+            // Actualizar alerta de Prueba de Mezcla
+            const mezclaAlert = document.getElementById('mezcla-alert');
+            const mezclaText = document.getElementById('mezcla-text');
+            
+            if(data.mezcla) {
+                mezclaAlert.classList.remove('hidden');
+                mezclaText.textContent = data.mezcla;
+                
+                // Color coding rápido
+                if(data.mezcla.includes('NO')) {
+                    mezclaText.classList.add('text-red-700', 'font-bold');
+                    mezclaText.classList.remove('text-slate-700');
+                } else {
+                    mezclaText.classList.add('text-slate-700');
+                    mezclaText.classList.remove('text-red-700', 'font-bold');
+                }
+            } else {
+                mezclaAlert.classList.add('hidden');
+            }
+        }
+
+        // Inicializar al cargar el DOM
+        document.addEventListener('DOMContentLoaded', () => {
+            initChart();
+        });
+
+    </script>
+</body>
+</html>
